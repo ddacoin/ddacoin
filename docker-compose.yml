@@ -1,0 +1,24 @@
+# DDACOIN node: time-based consensus, 1 hour per block.
+# P2P port 9666, fallback peer ddacoin.kos.engineer.
+#
+# Run: docker compose up -d
+# With block producer: set GENERATE=1 and MININGADDR in environment (see below).
+
+services:
+  ddacoin:
+    build: .
+    image: ddacoin:latest
+    container_name: ddacoin-node
+    ports:
+      - "9666:9666"   # P2P
+      - "9667:9667"   # RPC
+    volumes:
+      - ddacoin-data:/data
+    # Optional: enable built-in block producer (requires at least one miningaddr)
+    # environment:
+    #   - GENERATE=1
+    # command: ["-b", "/data", "--generate", "--miningaddr=<your address>"]
+    restart: unless-stopped
+
+volumes:
+  ddacoin-data: {}

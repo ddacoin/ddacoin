@@ -1,0 +1,10 @@
+---
+description: "[MOST IMPORTANT] Only read, edit, and create files inside the ddacoin project folder."
+alwaysApply: true
+---
+
+# Stay in folder only (most important)
+
+- **All file operations stay in this project.** Only read, edit, and create files under the ddacoin project root (the folder that contains this `.cursor/rules/`).
+- **Do not access files outside this folder.** Do not read, edit, or create files in the workspace root (e.g. `/home`), in sibling folders, or in other projects.
+- **Use project-scoped paths.** In commands and tool calls, use paths relative to the project root or explicitly under it (e.g. `ddacoin/...` when workspace is broader, or relative paths when workspace is ddacoin).
