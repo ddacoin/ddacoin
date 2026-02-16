@@ -43,18 +43,28 @@ const (
 	ddacoinBlockIntervalSecs = 3600
 	// ddacoinProducerPollSecs is how often the time-based producer rechecks (seconds).
 	// Kept high to reduce CPU wakeups on low-power devices (e.g. Raspberry Pi).
-	ddacoinProducerPollSecs = 300
+	ddacoinProducerPollSecs = 600
 	// ddacoinProducerMaxRandomDelaySecs is the max random delay (seconds) after slot time
 	// before building a block, so submission order is not purely latency-based.
 	ddacoinProducerMaxRandomDelaySecs = 300
+	// notReadyPollSecs is how long to sleep when chain is not current or peers < 2.
+	// Longer than 30s to reduce wakeups and CPU when not ready to produce.
+	notReadyPollSecs = 60
 )
 
 var (
-	// defaultNumWorkers is the default number of workers to use for mining
-	// and is based on the number of processor cores.  This helps ensure the
-	// system stays reasonably responsive under heavy load.
-	defaultNumWorkers = uint32(runtime.NumCPU())
+	// defaultNumWorkers is the default number of workers to use for mining,
+	// capped at 2 cores max to keep the system responsive.
+	defaultNumWorkers uint32
 )
+
+func init() {
+	n := runtime.NumCPU()
+	if n > 2 {
+		n = 2
+	}
+	defaultNumWorkers = uint32(n)
+}
 
 // Config is a descriptor containing the cpu miner configuration.
 type Config struct {
@@ -379,6 +389,14 @@ out:
 // spreads submission time so the outcome is not purely latency-based. Must be run as a goroutine.
 func (m *CPUMiner) ddacoinBlockProducerLoop() {
 	log.Tracef("DDACOIN time-based block producer started")
+	timer := time.NewTimer(0)
+	if !timer.Stop() {
+		select {
+		case <-timer.C:
+		default:
+		}
+	}
+	defer timer.Stop()
 out:
 	for {
 		select {
@@ -387,10 +405,13 @@ out:
 		default:
 		}
 
-		// Do not require peers for DDACOIN time-based producer: a single node
-		// can run the whole network (consensus is by time slot, not peer count).
+		// Require chain to be current and at least 2 peers before producing blocks.
 		if !m.cfg.IsCurrent() {
-			time.Sleep(30 * time.Second)
+			time.Sleep(notReadyPollSecs * time.Second)
+			continue
+		}
+		if m.cfg.ConnectedCount() < 2 {
+			time.Sleep(notReadyPollSecs * time.Second)
 			continue
 		}
 
@@ -405,10 +426,17 @@ out:
 			if sleep > ddacoinProducerPollSecs*time.Second {
 				sleep = ddacoinProducerPollSecs * time.Second
 			}
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+			timer.Reset(sleep)
 			select {
 			case <-m.quit:
 				break out
-			case <-time.After(sleep):
+			case <-timer.C:
 			}
 			continue
 		}
@@ -417,10 +445,17 @@ out:
 		// determined purely by propagation latency (consensus tie-break is by block hash).
 		delaySecs := rand.Intn(ddacoinProducerMaxRandomDelaySecs + 1)
 		if delaySecs > 0 {
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+			timer.Reset(time.Duration(delaySecs) * time.Second)
 			select {
 			case <-m.quit:
 				break out
-			case <-time.After(time.Duration(delaySecs) * time.Second):
+			case <-timer.C:
 			}
 		}
 

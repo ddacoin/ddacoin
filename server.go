@@ -3080,6 +3080,9 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 
 	// Create a connection manager.
 	targetOutbound := defaultTargetOutbound
+	if cfg.TargetOutbound > 0 {
+		targetOutbound = cfg.TargetOutbound
+	}
 	if cfg.MaxPeers < targetOutbound {
 		targetOutbound = cfg.MaxPeers
 	}

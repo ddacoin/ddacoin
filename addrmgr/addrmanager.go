@@ -120,6 +120,10 @@ const (
 	// over.
 	newBucketCount = 1024
 
+	// maxGetAddressIterations caps iterations in GetAddress to bound CPU
+	// when many addresses have low selection chance (e.g. recently attempted).
+	maxGetAddressIterations = 100
+
 	// triedBucketsPerGroup is the number of tried buckets over which an
 	// address group will be spread.
 	triedBucketsPerGroup = 8
@@ -805,7 +809,8 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 		// Tried entry.
 		large := 1 << 30
 		factor := 1.0
-		for {
+		var lastKa *KnownAddress
+		for iter := 0; iter < maxGetAddressIterations; iter++ {
 			// pick a random bucket.
 			bucket := a.rand.Intn(len(a.addrTried))
 			if a.addrTried[bucket].Len() == 0 {
@@ -819,6 +824,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 				e = e.Next()
 			}
 			ka := e.Value.(*KnownAddress)
+			lastKa = ka
 			randval := a.rand.Intn(large)
 			if float64(randval) < (factor * ka.chance() * float64(large)) {
 				log.Tracef("Selected %v from tried bucket",
@@ -827,12 +833,16 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 			}
 			factor *= 1.2
 		}
+		if lastKa != nil {
+			return lastKa
+		}
 	} else {
 		// new node.
 		// XXX use a closure/function to avoid repeating this.
 		large := 1 << 30
 		factor := 1.0
-		for {
+		var lastKa *KnownAddress
+		for iter := 0; iter < maxGetAddressIterations; iter++ {
 			// Pick a random bucket.
 			bucket := a.rand.Intn(len(a.addrNew))
 			if len(a.addrNew[bucket]) == 0 {
@@ -847,6 +857,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 				}
 				nth--
 			}
+			lastKa = ka
 			randval := a.rand.Intn(large)
 			if float64(randval) < (factor * ka.chance() * float64(large)) {
 				log.Tracef("Selected %v from new bucket",
@@ -855,7 +866,11 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 			}
 			factor *= 1.2
 		}
+		if lastKa != nil {
+			return lastKa
+		}
 	}
+	return nil
 }
 
 func (a *AddrManager) find(addr *wire.NetAddressV2) *KnownAddress {

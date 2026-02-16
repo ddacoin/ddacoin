@@ -67,6 +67,7 @@ const (
 	defaultUtxoCacheMaxSizeMiB   = 250
 	// Low-resource defaults for DDACOIN (e.g. Raspberry Pi).
 	defaultMaxPeersDDACoin             = 8
+	defaultTargetOutboundDDACoin       = 2
 	defaultUtxoCacheMaxSizeMiBDDACoin  = 64
 	defaultTrickleIntervalDDACoin      = 30 * time.Second // less frequent than 10s to cut CPU
 	sampleConfigFilename         = "sample-btcd.conf"
@@ -133,6 +134,7 @@ type config struct {
 	LogDir               string        `long:"logdir" description:"Directory to log output."`
 	MaxOrphanTxs         int           `long:"maxorphantx" description:"Max number of orphan transactions to keep in memory"`
 	MaxPeers             int           `long:"maxpeers" description:"Max number of inbound and outbound peers"`
+	TargetOutbound       int           `long:"targetoutbound" description:"Target number of outbound connections (0 = use default, DDACOIN default 2)"`
 	MiningAddrs          []string      `long:"miningaddr" description:"Add the specified payment address to the list of addresses to use for generated blocks -- At least one address is required if the generate option is set"`
 	MinRelayTxFee        float64       `long:"minrelaytxfee" description:"The minimum transaction fee in BTC/kB to be considered a non-zero fee."`
 	DisableBanning       bool          `long:"nobanning" description:"Disable banning of misbehaving peers"`
@@ -633,6 +635,9 @@ func loadConfig() (*config, []string, error) {
 	if activeNetParams.Params.Net == wire.DDACoinNet {
 		if cfg.MaxPeers == defaultMaxPeers {
 			cfg.MaxPeers = defaultMaxPeersDDACoin
+		}
+		if cfg.TargetOutbound == 0 {
+			cfg.TargetOutbound = defaultTargetOutboundDDACoin
 		}
 		if cfg.UtxoCacheMaxSizeMiB == defaultUtxoCacheMaxSizeMiB {
 			cfg.UtxoCacheMaxSizeMiB = defaultUtxoCacheMaxSizeMiBDDACoin
