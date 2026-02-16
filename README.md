@@ -55,13 +55,25 @@ docker run -v ddacoin-data:/data -p 9666:9666 -p 9667:9667 \
 
 ## Docker Compose
 
-Copy `.env.example` to `.env` and set `RPC_USER`, `RPC_PASS`, and `MINING_ADDR` (mining payout address). Then:
+### Generating a wallet address (before building the container)
+
+If you want a mining payout address before you build or run the Docker container, generate one on the host (requires [Go](https://golang.org) 1.22+):
+
+```bash
+go run ./cmd/genaddress
+```
+
+This prints a DDACOIN address (starts with **D**) and a WIF private key. Put the **address** in `MINING_ADDR` in your `.env`; back up the **WIF** securely (e.g. to import later in the [web wallet](wallet/README.md)). You can also create a wallet in the web wallet and use its receive address instead.
+
+### Running with Compose
+
+Copy `.env.example` to `.env` and set `RPC_USER`, `RPC_PASS`, and `MINING_ADDR` (mining payout address; optional if you run as node-only). Then:
 
 ```bash
 docker compose up -d
 ```
 
-P2P: 9666, RPC: 9667, data: volume ddacoin-data. The node runs with RPC and the built-in block producer; credentials in `.env` are used by the explorer as well.
+P2P: 9666, RPC: 9667, data: volume ddacoin-data. The node runs with RPC and the built-in block producer when `MINING_ADDR` is set; credentials in `.env` are used by the explorer as well.
 
 ## Network
 
