@@ -9,4 +9,4 @@ use (
 	./v2transport
 )
 
-replace github.com/ddacoin/ddacoin/chaincfg/chainhash => ./chaincfg/chainhash
+replace github.com/ddacoin/ddacoin v0.24.2 => .
