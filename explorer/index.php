@@ -11,7 +11,8 @@ if ($count === null) {
     require __DIR__ . '/header.php';
     echo "<div class='err'>RPC error: " . htmlspecialchars($error) . "</div>";
     echo "<p>Ensure the DDACOIN node is running with RPC enabled (e.g. <code>--rpcuser=user --rpcpass=pass</code>) and that RPC_HOST/RPC_PORT (or RPC_URL) point to the node. ";
-    echo "If the explorer runs in Docker on the same host as the node, set <code>RPC_HOST</code> to your host IP (e.g. 192.168.178.183) in <code>explorer/.env</code>.</p>";
+    echo "If the explorer runs in Docker and the node on the host: in <code>explorer/.env</code> set <code>RPC_HOST=172.17.0.1</code> (Linux) or your host IP (e.g. 192.168.178.183), and <code>RPC_URL=https://&lt;same&gt;:9667</code>. ";
+    echo "If the node runs in Docker with the explorer, use <code>RPC_HOST=ddacoin-node</code> and ensure both share network <code>ddacoin-net</code>.</p>";
     require __DIR__ . '/footer.php';
     exit;
 }

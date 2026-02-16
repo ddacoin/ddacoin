@@ -40,6 +40,9 @@ function rpc_call(array $config, string $method, array $params = []): array {
         if (!empty($http_response_header) && preg_match('#^HTTP/\S+\s+(\d+)#', $http_response_header[0], $m)) {
             $code = (int) $m[1];
         }
+        if ($code === 401) {
+            return ['error' => 'RPC authentication failed (401). Ensure RPC_USER and RPC_PASS in explorer/.env match the node\'s --rpcuser/--rpcpass. Restart the node after changing ddacoin/.env.'];
+        }
         if ($code === 503) {
             return ['error' => 'Node too busy (max RPC clients). Try again in a moment or increase --rpcmaxclients on the node.'];
         }

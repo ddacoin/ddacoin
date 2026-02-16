@@ -88,6 +88,8 @@ A web wallet lives in the [wallet/](wallet/) directory. It provides an HD wallet
 
 A PHP-based blockchain explorer lives in [explorer/](explorer/). It shows chain info, latest blocks, block details, and transactions. Run it with Docker from `explorer/` (see [explorer/README.md](explorer/README.md)). It connects to the node’s RPC (port 9667).
 
+**Live explorer:** [https://ddacoin.kos.engineer/](https://ddacoin.kos.engineer/)
+
 ## License
 
 ISC (see [LICENSE](LICENSE)).
