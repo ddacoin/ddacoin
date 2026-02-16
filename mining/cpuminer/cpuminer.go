@@ -387,10 +387,8 @@ out:
 		default:
 		}
 
-		if m.cfg.ConnectedCount() == 0 {
-			time.Sleep(30 * time.Second)
-			continue
-		}
+		// Do not require peers for DDACOIN time-based producer: a single node
+		// can run the whole network (consensus is by time slot, not peer count).
 		if !m.cfg.IsCurrent() {
 			time.Sleep(30 * time.Second)
 			continue

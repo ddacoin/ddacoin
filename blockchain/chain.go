@@ -1328,6 +1328,14 @@ func (b *BlockChain) connectBestChain(node *blockNode, block *btcutil.Block, fla
 //
 // This function MUST be called with the chain state lock held (for reads).
 func (b *BlockChain) isCurrent() bool {
+	// When only the genesis block exists (height 0), consider the chain
+	// current so that block production can proceed. Otherwise a chain whose
+	// genesis has a timestamp older than 24 hours would never be "current"
+	// and the block producer would never create the next block (bootstrap deadlock).
+	if b.bestChain.Tip().height == 0 {
+		return true
+	}
+
 	// Not current if the latest main (best) chain height is before the
 	// latest known good checkpoint (when checkpoints are enabled).
 	checkpoint := b.LatestCheckpoint()
