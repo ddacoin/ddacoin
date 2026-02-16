@@ -27,7 +27,7 @@ networks:
   default: {}
   node:
     external: true
-    name: ddacoin_default
+    name: ddacoin-net
 
 volumes:
   wallet-data: {}
