@@ -11,13 +11,47 @@ if ($count === null) {
     require __DIR__ . '/header.php';
     echo "<div class='err'>RPC error: " . htmlspecialchars($error) . "</div>";
     echo "<p>Ensure the DDACOIN node is running with RPC enabled (e.g. <code>--rpcuser=user --rpcpass=pass</code>) and that RPC_HOST/RPC_PORT (or RPC_URL) point to the node. ";
-    echo "If the explorer runs in Docker and the node on the host: in <code>explorer/.env</code> set <code>RPC_HOST=172.17.0.1</code> (Linux) or your host IP (e.g. 192.168.178.183), and <code>RPC_URL=https://&lt;same&gt;:9667</code>. ";
+    echo "If the explorer runs in Docker and the node on the host: in <code>explorer/.env</code> set <code>RPC_HOST=172.17.0.1</code> (Linux) or your host IP (e.g. 172.17.0.1 or the machine's LAN address), and <code>RPC_URL=https://&lt;same&gt;:9667</code>. ";
     echo "If the node runs in Docker with the explorer, use <code>RPC_HOST=ddacoin-node</code> and ensure both share network <code>ddacoin-net</code>.</p>";
     require __DIR__ . '/footer.php';
     exit;
 }
 
 $info = rpc_get($config, 'getblockchaininfo');
+$peerInfo = rpc_get($config, 'getpeerinfo');
+$miningInfo = rpc_get($config, 'getmininginfo');
+$connectedCount = is_array($peerInfo) ? count($peerInfo) : 0;
+$verificationProgress = isset($info['verificationprogress']) ? (float)$info['verificationprogress'] : 1.0;
+$initialBlockDownload = !empty($info['initialblockdownload']);
+$networkHealth = $initialBlockDownload ? 'Syncing' : ($verificationProgress >= 0.9999 ? 'Healthy' : 'Syncing');
+$networkHealthPct = $verificationProgress >= 0.9999 ? '100%' : (round($verificationProgress * 100, 1) . '%');
+$pooledTx = isset($miningInfo['pooledtx']) ? (int)$miningInfo['pooledtx'] : (isset($miningInfo['PooledTx']) ? (int)$miningInfo['PooledTx'] : 0);
+
+// DDACOIN mined today (UTC): sum coinbase of blocks with time >= today 00:00 UTC
+$todayStartUtc = gmmktime(0, 0, 0, (int)gmdate('n'), (int)gmdate('j'), (int)gmdate('Y'));
+$minedToday = 0.0;
+$maxBlocksToScan = 48; // e.g. 2 days at 1 block/hour
+for ($h = (int)$count; $h >= 0 && $maxBlocksToScan > 0; $h--, $maxBlocksToScan--) {
+    $hash = rpc_get($config, 'getblockhash', [$h]);
+    if ($hash === null) {
+        break;
+    }
+    $block = rpc_get($config, 'getblock', [$hash, 2]);
+    if ($block === null || !isset($block['time'])) {
+        break;
+    }
+    if ((int)$block['time'] < $todayStartUtc) {
+        break;
+    }
+    // getblock verbosity 2 returns full tx list in "rawtx", not "tx"
+    $txs = $block['rawtx'] ?? $block['tx'] ?? [];
+    if (!empty($txs[0]['vout'])) {
+        foreach ($txs[0]['vout'] as $vout) {
+            $minedToday += (float)($vout['value'] ?? 0);
+        }
+    }
+}
+
 $blocks = [];
 $start = max(0, (int)$count - 14);
 for ($i = $count; $i >= $start && $i >= 0; $i--) {
@@ -34,6 +68,24 @@ for ($i = $count; $i >= $start && $i >= 0; $i--) {
 
 require __DIR__ . '/header.php';
 ?>
+<div class="stats-strip stats-strip--primary">
+  <div class="stat-box">
+    <div class="stat-label">Network health</div>
+    <div class="stat-value stat-value--health"><?= htmlspecialchars($networkHealth) ?> <span class="stat-sub"><?= htmlspecialchars($networkHealthPct) ?></span></div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">Connected nodes</div>
+    <div class="stat-value"><?= number_format($connectedCount) ?></div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label"><?= htmlspecialchars($config['coin_name']) ?> mined today</div>
+    <div class="stat-value"><?= number_format($minedToday, 8) ?></div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">Pending transactions</div>
+    <div class="stat-value"><?= number_format($pooledTx) ?></div>
+  </div>
+</div>
 <div class="stats-strip">
   <div class="stat-box">
     <div class="stat-label">Chain</div>

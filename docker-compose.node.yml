@@ -1,0 +1,16 @@
+# Override for DDACOIN node (the miner daemon) in node-only mode (no block production).
+# Keep this file in ddacoin/ (project root). Do not put it in explorer/ — the explorer is separate.
+# Usage (from ddacoin/): docker compose -f docker-compose.yml -f docker-compose.node.yml up -d
+# Same .env (RPC_USER, RPC_PASS); MINING_ADDR not required.
+
+services:
+  ddacoin:
+    command:
+      - "-b"
+      - "/data"
+      - "--rpcuser=${RPC_USER}"
+      - "--rpcpass=${RPC_PASS}"
+      - "--rpclisten=0.0.0.0:9667"
+      - "--rpcmaxclients=20"
+      - "--txindex"
+      - "--addrindex"

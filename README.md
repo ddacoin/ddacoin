@@ -67,13 +67,21 @@ This prints a DDACOIN address (starts with **D**) and a WIF private key. Put the
 
 ### Running with Compose
 
-Copy `.env.example` to `.env` and set `RPC_USER`, `RPC_PASS`, and `MINING_ADDR` (mining payout address; optional if you run as node-only). Then:
+Copy `.env.example` to `.env` and set `RPC_USER` and `RPC_PASS`. Then choose a mode:
+
+**Miner mode** (sync + produce blocks; requires `MINING_ADDR` in `.env`):
 
 ```bash
 docker compose up -d
 ```
 
-P2P: 9666, RPC: 9667, data: volume ddacoin-data. The node runs with RPC and the built-in block producer when `MINING_ADDR` is set; credentials in `.env` are used by the explorer as well.
+**Node-only mode** (sync and relay only; no block production; `MINING_ADDR` not needed):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.node.yml up -d
+```
+
+P2P: 9666, RPC: 9667, data: volume ddacoin-data. Credentials in `.env` are used by the explorer as well.
 
 ## Network
 

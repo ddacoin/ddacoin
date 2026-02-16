@@ -66,8 +66,8 @@ const (
 	defaultSigCacheMaxSize       = 100000
 	defaultUtxoCacheMaxSizeMiB   = 250
 	// Low-resource defaults for DDACOIN (e.g. Raspberry Pi).
-	defaultMaxPeersDDACoin             = 8
-	defaultTargetOutboundDDACoin       = 2
+	defaultMaxPeersDDACoin             = 16
+	defaultTargetOutboundDDACoin       = 6
 	defaultUtxoCacheMaxSizeMiBDDACoin  = 64
 	defaultTrickleIntervalDDACoin      = 30 * time.Second // less frequent than 10s to cut CPU
 	sampleConfigFilename         = "sample-btcd.conf"
