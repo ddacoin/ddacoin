@@ -9,6 +9,12 @@ DDACOIN is a [btcd](https://github.com/btcsuite/btcd) fork that replaces proof-o
 - **Fallback peer:** `ddacoin.kos.engineer:9666`
 - **RPC port:** 9667 (when enabled)
 
+This repository includes:
+
+- **Node** (this directory) – DDACOIN full node and RPC server
+- **[Wallet](wallet/)** – Web wallet (HD/BIP39, P2PKH addresses, send/receive) – see [wallet/README.md](wallet/README.md)
+- **[Explorer](explorer/)** – PHP blockchain explorer (blocks, transactions, chain info) – see [explorer/README.md](explorer/README.md)
+
 ## Requirements
 
 [Go](https://golang.org) 1.22 or newer.
@@ -64,7 +70,11 @@ P2P: 9666, RPC: 9667, data: volume ddacoin-data. The node runs with RPC and the 
 
 ## Wallet
 
-This node does not include a wallet. Use [btcwallet](https://github.com/btcsuite/btcwallet) against DDACOIN, or a minimal CLI can be added in a later phase.
+A web wallet lives in the [wallet/](wallet/) directory. It provides an HD wallet (BIP39/BIP44), P2PKH addresses (starting with **D**), balance and send via the node RPC. Run it with Docker from `wallet/` (see [wallet/README.md](wallet/README.md)). The node must have RPC enabled and `--addrindex` for balance and history.
+
+## Explorer
+
+A PHP-based blockchain explorer lives in [explorer/](explorer/). It shows chain info, latest blocks, block details, and transactions. Run it with Docker from `explorer/` (see [explorer/README.md](explorer/README.md)). It connects to the node’s RPC (port 9667).
 
 ## License
 
