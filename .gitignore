@@ -64,3 +64,11 @@ btcutil/psbt/coverage.txt
 
 .DS_Store
 .aider*
+
+# Env files (use .env.example as template)
+.env
+explorer/.env
+
+# Cursor IDE
+.cursor/
+.cursorignore

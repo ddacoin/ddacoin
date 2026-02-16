@@ -6,6 +6,7 @@
 package blockchain
 
 import (
+	"bytes"
 	"container/list"
 	"fmt"
 	"sync"
@@ -1252,8 +1253,10 @@ func (b *BlockChain) connectBestChain(node *blockNode, block *btcutil.Block, fla
 
 	// We're extending (or creating) a side chain, but the cumulative
 	// work for this new side chain is not enough to make it the new chain.
-	if node.workSum.Cmp(b.bestChain.Tip().workSum) <= 0 {
-		// Log information about how the block is forking the chain.
+	tip := b.bestChain.Tip()
+	cmpWork := node.workSum.Cmp(tip.workSum)
+	if cmpWork < 0 {
+		// Strictly less work: never reorg.
 		fork := b.bestChain.FindFork(node)
 		if fork.hash.IsEqual(parentHash) {
 			log.Infof("FORK: Block %v forks the chain at height %d"+
@@ -1264,8 +1267,33 @@ func (b *BlockChain) connectBestChain(node *blockNode, block *btcutil.Block, fla
 				"which forks the chain at height %d/block %v",
 				node.hash, fork.height, fork.hash)
 		}
-
 		return false, nil
+	}
+	if cmpWork == 0 {
+		// Equal work: for DDACOIN, tie-break by preferring the block with the
+		// smaller hash (so the winner is not "first seen" but deterministic).
+		if b.chainParams.Net == wire.DDACoinNet && node.height == tip.height {
+			if bytes.Compare(node.hash[:], tip.hash[:]) >= 0 {
+				log.Infof("FORK: Block %v forks the chain at height %d"+
+					"/block %v, tie-break keeps current tip (lower hash wins)",
+					node.hash, tip.height, tip.hash)
+				return false, nil
+			}
+			// This block has smaller hash; fall through to reorg.
+		} else {
+			// Non-DDACOIN or different height: do not reorg.
+			fork := b.bestChain.FindFork(node)
+			if fork.hash.IsEqual(parentHash) {
+				log.Infof("FORK: Block %v forks the chain at height %d"+
+					"/block %v, but does not cause a reorganize",
+					node.hash, fork.height, fork.hash)
+			} else {
+				log.Infof("EXTEND FORK: Block %v extends a side chain "+
+					"which forks the chain at height %d/block %v",
+					node.hash, fork.height, fork.hash)
+			}
+			return false, nil
+		}
 	}
 
 	// We're extending (or creating) a side chain and the cumulative work

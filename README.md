@@ -49,11 +49,13 @@ docker run -v ddacoin-data:/data -p 9666:9666 -p 9667:9667 \
 
 ## Docker Compose
 
+Copy `.env.example` to `.env` and set `RPC_USER`, `RPC_PASS`, and `MINING_ADDR` (mining payout address). Then:
+
 ```bash
 docker compose up -d
-# P2P: 9666, RPC: 9667, data: volume ddacoin-data
-# To run with block producer, override command in docker-compose.yml (see file comments).
 ```
+
+P2P: 9666, RPC: 9667, data: volume ddacoin-data. The node runs with RPC and the built-in block producer; credentials in `.env` are used by the explorer as well.
 
 ## Network
 

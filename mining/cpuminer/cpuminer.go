@@ -42,7 +42,11 @@ const (
 	// ddacoinBlockIntervalSecs is the required seconds between blocks for DDACOIN (1 hour).
 	ddacoinBlockIntervalSecs = 3600
 	// ddacoinProducerPollSecs is how often the time-based producer rechecks (seconds).
-	ddacoinProducerPollSecs = 60
+	// Kept moderate to reduce CPU wakeups on low-power devices (e.g. Raspberry Pi).
+	ddacoinProducerPollSecs = 120
+	// ddacoinProducerMaxRandomDelaySecs is the max random delay (seconds) after slot time
+	// before building a block, so submission order is not purely latency-based.
+	ddacoinProducerMaxRandomDelaySecs = 300
 )
 
 var (
@@ -370,7 +374,9 @@ out:
 }
 
 // ddacoinBlockProducerLoop produces one block per time slot (1 hour) for DDACOIN.
-// No proof-of-work; first valid block submitted wins. Must be run as a goroutine.
+// No proof-of-work; when multiple valid blocks exist for a slot, the one with the
+// smallest block hash wins (tie-break in consensus). A random delay before building
+// spreads submission time so the outcome is not purely latency-based. Must be run as a goroutine.
 func (m *CPUMiner) ddacoinBlockProducerLoop() {
 	log.Tracef("DDACOIN time-based block producer started")
 out:
@@ -382,11 +388,11 @@ out:
 		}
 
 		if m.cfg.ConnectedCount() == 0 {
-			time.Sleep(time.Second)
+			time.Sleep(10 * time.Second)
 			continue
 		}
 		if !m.cfg.IsCurrent() {
-			time.Sleep(time.Second)
+			time.Sleep(10 * time.Second)
 			continue
 		}
 
@@ -409,6 +415,17 @@ out:
 			continue
 		}
 
+		// Random delay 0..ddacoinProducerMaxRandomDelaySecs so the winner is not
+		// determined purely by propagation latency (consensus tie-break is by block hash).
+		delaySecs := rand.Intn(ddacoinProducerMaxRandomDelaySecs + 1)
+		if delaySecs > 0 {
+			select {
+			case <-m.quit:
+				break out
+			case <-time.After(time.Duration(delaySecs) * time.Second):
+			}
+		}
+
 		rand.Seed(time.Now().UnixNano())
 		payToAddr := m.cfg.MiningAddrs[rand.Intn(len(m.cfg.MiningAddrs))]
 
@@ -417,7 +434,7 @@ out:
 		m.submitBlockLock.Unlock()
 		if err != nil {
 			log.Errorf("DDACOIN block template failed: %v", err)
-			time.Sleep(ddacoinProducerPollSecs * time.Second)
+			time.Sleep(time.Duration(ddacoinProducerPollSecs) * time.Second)
 			continue
 		}
 
@@ -617,6 +634,10 @@ func (m *CPUMiner) NumWorkers() int32 {
 // detecting when it is performing stale work and reacting accordingly by
 // generating a new block template.  When a block is solved, it is submitted.
 // The function returns a list of the hashes of generated blocks.
+//
+// For DDACOIN (time-based consensus), no proof-of-work is performed: blocks
+// are created one per time slot (1 hour) by waiting until the next slot and
+// submitting a valid block. This avoids CPU-intensive hashing.
 func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 	m.Lock()
 
@@ -629,45 +650,84 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 
 	m.started = true
 	m.discreteMining = true
+	isDDACoin := m.cfg.ChainParams.Net == wire.DDACoinNet
+	m.Unlock()
 
+	blockHashes := make([]*chainhash.Hash, n)
+	if n == 0 {
+		m.Lock()
+		m.started = false
+		m.discreteMining = false
+		m.Unlock()
+		return blockHashes, nil
+	}
+
+	if isDDACoin {
+		// Time-based: wait for each slot, create block, submit. No PoW.
+		for i := uint32(0); i < n; i++ {
+			m.submitBlockLock.Lock()
+			best := m.g.BestSnapshot()
+			nextSlot := best.BlockTime.Add(ddacoinBlockIntervalSecs * time.Second)
+			m.submitBlockLock.Unlock()
+
+			now := time.Now()
+			if now.Before(nextSlot) {
+				sleep := time.Until(nextSlot)
+				if sleep > ddacoinProducerPollSecs*time.Second {
+					sleep = ddacoinProducerPollSecs * time.Second
+				}
+				time.Sleep(sleep)
+				continue
+			}
+
+			rand.Seed(time.Now().UnixNano())
+			payToAddr := m.cfg.MiningAddrs[rand.Intn(len(m.cfg.MiningAddrs))]
+			m.submitBlockLock.Lock()
+			template, err := m.g.NewBlockTemplate(payToAddr)
+			m.submitBlockLock.Unlock()
+			if err != nil {
+				log.Errorf("DDACOIN generate block template: %v", err)
+				time.Sleep(ddacoinProducerPollSecs * time.Second)
+				i--
+				continue
+			}
+
+			block := btcutil.NewBlock(template.Block)
+			block.SetHeight(template.Height)
+			if m.submitBlock(block) {
+				blockHashes[i] = block.Hash()
+				log.Tracef("Generated DDACOIN block %d (height %d)", i+1, template.Height)
+			} else {
+				i-- // submit failed, retry
+			}
+		}
+		log.Tracef("Generated %d DDACOIN blocks (time-based)", n)
+		m.Lock()
+		m.started = false
+		m.discreteMining = false
+		m.Unlock()
+		return blockHashes, nil
+	}
+
+	// PoW path: speed monitor and solveBlock loop.
 	m.speedMonitorQuit = make(chan struct{})
 	m.wg.Add(1)
 	go m.speedMonitor()
-
-	m.Unlock()
-
 	log.Tracef("Generating %d blocks", n)
-
 	i := uint32(0)
-	blockHashes := make([]*chainhash.Hash, n)
-
-	// Start a ticker which is used to signal checks for stale work and
-	// updates to the speed monitor.
 	ticker := time.NewTicker(time.Second * hashUpdateSecs)
 	defer ticker.Stop()
 
 	for {
-		// Read updateNumWorkers in case someone tries a `setgenerate` while
-		// we're generating. We can ignore it as the `generate` RPC call only
-		// uses 1 worker.
 		select {
 		case <-m.updateNumWorkers:
 		default:
 		}
 
-		// Grab the lock used for block submission, since the current block will
-		// be changing and this would otherwise end up building a new block
-		// template on a block that is in the process of becoming stale.
 		m.submitBlockLock.Lock()
 		curHeight := m.g.BestSnapshot().Height
-
-		// Choose a payment address at random.
 		rand.Seed(time.Now().UnixNano())
 		payToAddr := m.cfg.MiningAddrs[rand.Intn(len(m.cfg.MiningAddrs))]
-
-		// Create a new block template using the available transactions
-		// in the memory pool as a source of transactions to potentially
-		// include in the block.
 		template, err := m.g.NewBlockTemplate(payToAddr)
 		m.submitBlockLock.Unlock()
 		if err != nil {
@@ -677,10 +737,6 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 			continue
 		}
 
-		// Attempt to solve the block.  The function will exit early
-		// with false when conditions that trigger a stale block, so
-		// a new block template can be generated.  When the return is
-		// true a solution was found, so submit the solved block.
 		if m.solveBlock(template.Block, curHeight+1, ticker, nil) {
 			block := btcutil.NewBlock(template.Block)
 			m.submitBlock(block)

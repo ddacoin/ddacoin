@@ -65,6 +65,9 @@ const (
 	defaultMaxOrphanTxSize       = 100000
 	defaultSigCacheMaxSize       = 100000
 	defaultUtxoCacheMaxSizeMiB   = 250
+	// Low-resource defaults for DDACOIN (e.g. Raspberry Pi).
+	defaultMaxPeersDDACoin          = 16
+	defaultUtxoCacheMaxSizeMiBDDACoin = 64
 	sampleConfigFilename         = "sample-btcd.conf"
 	defaultTxIndex               = false
 	defaultAddrIndex             = false
@@ -622,6 +625,17 @@ func loadConfig() (*config, []string, error) {
 		fmt.Fprintln(os.Stderr, err)
 		fmt.Fprintln(os.Stderr, usageMessage)
 		return nil, nil, err
+	}
+
+	// DDACOIN low-resource defaults for small devices (e.g. Raspberry Pi).
+	// Reduces peer count and UTXO cache to lower CPU and memory use.
+	if activeNetParams.Params.Net == wire.DDACoinNet {
+		if cfg.MaxPeers == defaultMaxPeers {
+			cfg.MaxPeers = defaultMaxPeersDDACoin
+		}
+		if cfg.UtxoCacheMaxSizeMiB == defaultUtxoCacheMaxSizeMiB {
+			cfg.UtxoCacheMaxSizeMiB = defaultUtxoCacheMaxSizeMiBDDACoin
+		}
 	}
 
 	// Set the default policy for relaying non-standard transactions
