@@ -10,7 +10,8 @@ if ($count === null) {
     $error = $res['error'] ?? 'Unknown error';
     require __DIR__ . '/header.php';
     echo "<div class='err'>RPC error: " . htmlspecialchars($error) . "</div>";
-    echo "<p>Ensure the DDACOIN node is running with RPC enabled (e.g. <code>--rpcuser=user --rpcpass=pass</code>) and that RPC_HOST/RPC_PORT (or RPC_URL) point to the node.</p>";
+    echo "<p>Ensure the DDACOIN node is running with RPC enabled (e.g. <code>--rpcuser=user --rpcpass=pass</code>) and that RPC_HOST/RPC_PORT (or RPC_URL) point to the node. ";
+    echo "If the explorer runs in Docker on the same host as the node, set <code>RPC_HOST</code> to your host IP (e.g. 192.168.178.183) in <code>explorer/.env</code>.</p>";
     require __DIR__ . '/footer.php';
     exit;
 }

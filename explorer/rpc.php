@@ -43,7 +43,8 @@ function rpc_call(array $config, string $method, array $params = []): array {
         if ($code === 503) {
             return ['error' => 'Node too busy (max RPC clients). Try again in a moment or increase --rpcmaxclients on the node.'];
         }
-        return ['error' => 'Could not connect to node. Is RPC enabled (--rpcuser/--rpcpass)?'];
+        $urlForErr = preg_replace('#://[^@]+@#', '://***:***@', $url);
+        return ['error' => 'Could not connect to node. Is RPC enabled (--rpcuser/--rpcpass)? Tried: ' . $urlForErr];
     }
 
     $out = json_decode($raw, true);
