@@ -1,4 +1,4 @@
-PKG := github.com/btcsuite/btcd
+PKG := github.com/ddacoin/ddacoin
 
 LINT_PKG := github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 GOIMPORTS_PKG := golang.org/x/tools/cmd/goimports
