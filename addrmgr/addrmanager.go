@@ -836,6 +836,12 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 		if lastKa != nil {
 			return lastKa
 		}
+		// Hit iteration cap without selecting; return any tried address.
+		for b := range a.addrTried {
+			if a.addrTried[b].Len() > 0 {
+				return a.addrTried[b].Front().Value.(*KnownAddress)
+			}
+		}
 	} else {
 		// new node.
 		// XXX use a closure/function to avoid repeating this.
@@ -868,6 +874,12 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 		}
 		if lastKa != nil {
 			return lastKa
+		}
+		// Hit iteration cap without selecting; return any new address.
+		for b := range a.addrNew {
+			for _, ka := range a.addrNew[b] {
+				return ka
+			}
 		}
 	}
 	return nil

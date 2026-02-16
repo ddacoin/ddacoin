@@ -37,6 +37,10 @@ _testmain.go
 profile.tmp
 profile.cov
 coverage.txt
+
+# pprof profiles (go tool pprof)
+*.prof
+cpu.prof
 btcec/coverage.txt
 btcutil/coverage.txt
 btcutil/psbt/coverage.txt
@@ -81,6 +85,7 @@ wallet/*-state.json
 wallet/*.key
 wallet/*.keystore
 
-# Cursor IDE
+# Cursor IDE (local only, do not commit)
 .cursor/
+.cursor*
 .cursorignore
