@@ -58,6 +58,7 @@ btcutil/psbt/coverage.txt
 /addblock
 /btcctl
 /btcd
+/ddacoin
 /ddacoin-node
 /findcheckpoint
 /gencerts
