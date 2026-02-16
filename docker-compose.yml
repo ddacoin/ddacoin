@@ -20,6 +20,9 @@ services:
       - "--rpcuser=${RPC_USER}"
       - "--rpcpass=${RPC_PASS}"
       - "--rpclisten=0.0.0.0:9667"
+      - "--rpcmaxclients=20"
+      - "--txindex"
+      - "--addrindex"
       - "--generate"
       - "--miningaddr=${MINING_ADDR}"
     restart: unless-stopped

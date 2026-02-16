@@ -9,8 +9,7 @@ The limited user cannot access this RPC.
 [Application Options]
 rpcuser=myuser
 rpcpass=SomeDecentp4ssw0rd
-miningaddr=12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX
-miningaddr=1M83ju3EChKYyysmM2FXtLNftbacagd8FR
+miningaddr=DJhKH8ynyzWX52gaz9V6iFJ154hGg5Crxb
 ```
 
 ## Add btcd's RPC TLS certificate to system Certificate Authority list

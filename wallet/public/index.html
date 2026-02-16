@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DDACOIN Wallet</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --success: #3fb950;
+      --danger: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+    .container { max-width: 480px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin: 0 0 1rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 { font-size: 1rem; margin: 0 0 0.75rem; color: var(--muted); }
+    input, textarea, button {
+      font: inherit;
+      color: inherit;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    button {
+      cursor: pointer;
+      width: auto;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+    }
+    button:hover { opacity: 0.9; }
+    button.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    button.danger { background: var(--danger); color: #fff; }
+    .balance { font-size: 1.75rem; font-weight: 600; color: var(--success); }
+    .address { font-family: ui-monospace, monospace; font-size: 0.85rem; word-break: break-all; }
+    .qr { margin: 1rem 0; text-align: center; }
+    .qr img { border-radius: 8px; max-width: 220px; }
+    .error { color: var(--danger); font-size: 0.9rem; margin-top: 0.5rem; }
+    .hidden { display: none; }
+    .flex { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    nav { margin-bottom: 1rem; }
+    nav a { color: var(--accent); text-decoration: none; margin-right: 1rem; }
+    nav a:hover { text-decoration: underline; }
+    .status { font-size: 0.85rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DDACOIN Wallet</h1>
+    <p class="status" id="nodeStatus">Checking node…</p>
+    <nav id="nav" class="hidden">
+      <a href="#" data-page="dashboard">Dashboard</a>
+      <a href="#" data-page="receive">Receive</a>
+      <a href="#" data-page="send">Send</a>
+      <button type="button" class="secondary" id="btnLogout">Logout</button>
+    </nav>
+
+    <div id="pageWelcome">
+      <div class="card">
+        <h2>Create or restore wallet</h2>
+        <button type="button" id="btnCreate">Create new wallet</button>
+        <p class="muted" style="margin: 0.5rem 0;">or restore from 12-word backup phrase</p>
+        <textarea id="restoreMnemonic" placeholder="Enter your 12-word recovery phrase…"></textarea>
+        <button type="button" class="secondary" id="btnRestore">Restore wallet</button>
+        <p class="muted" style="margin: 0.75rem 0 0.25rem;">or import from private key (WIF)</p>
+        <p class="muted" style="margin: 0; font-size: 0.85rem;">If you only have a private key (e.g. from <code>ddacoin genaddress</code>), paste the WIF below.</p>
+        <textarea id="importWif" placeholder="Paste WIF private key (starts with a base58 character)…" rows="2"></textarea>
+        <button type="button" class="secondary" id="btnImport">Import key</button>
+        <p id="welcomeError" class="error hidden"></p>
+      </div>
+    </div>
+
+    <div id="pageCreate" class="hidden">
+      <div class="card">
+        <h2>Backup your recovery phrase</h2>
+        <p>Write these 12 words down and store them safely. Anyone with this phrase can access your coins.</p>
+        <textarea id="newMnemonic" readonly></textarea>
+        <button type="button" id="btnGoDashboard">Go to wallet</button>
+      </div>
+    </div>
+
+    <div id="pageDashboard" class="hidden">
+      <div class="card">
+        <h2>Balance</h2>
+        <p class="balance" id="balance">—</p>
+        <p class="muted">DDACOIN</p>
+        <p id="balanceError" class="error hidden"></p>
+      </div>
+      <div class="card">
+        <p class="muted">Receive address</p>
+        <p class="address" id="dashboardAddress">—</p>
+        <p class="muted" style="font-size: 0.8rem; margin-top: 0.5rem;">For mining payouts, this must match <code>MINING_ADDR</code> in your node's <code>.env</code>.</p>
+        <a href="#" data-page="receive">Show QR code</a>
+      </div>
+    </div>
+
+    <div id="pageReceive" class="hidden">
+      <div class="card">
+        <h2>Receive DDACOIN</h2>
+        <p class="address" id="receiveAddress">—</p>
+        <div class="qr" id="receiveQr"></div>
+      </div>
+    </div>
+
+    <div id="pageSend" class="hidden">
+      <div class="card">
+        <h2>Send DDACOIN</h2>
+        <input type="text" id="sendTo" placeholder="Destination address (starts with D)">
+        <input type="text" id="sendAmount" placeholder="Amount (e.g. 1.5)">
+        <button type="button" id="btnSend">Send</button>
+        <p id="sendError" class="error hidden"></p>
+        <p id="sendSuccess" class="hidden" style="color: var(--success);"></p>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

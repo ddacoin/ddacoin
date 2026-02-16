@@ -68,6 +68,17 @@ btcutil/psbt/coverage.txt
 # Env files (use .env.example as template)
 .env
 explorer/.env
+wallet/.env
+
+# Wallet – Node/TS (do not commit dependencies or build output)
+wallet/node_modules/
+wallet/dist/
+
+# Wallet keys and state (in-memory only by default; if persisted, must not be committed)
+wallet/data/
+wallet/*-state.json
+wallet/*.key
+wallet/*.keystore
 
 # Cursor IDE
 .cursor/

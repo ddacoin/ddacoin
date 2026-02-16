@@ -11,6 +11,7 @@ services:
     volumes:
       - .:/var/www/html
     environment:
+      - RPC_URL=${RPC_URL}
       - RPC_HOST=${RPC_HOST:-host.docker.internal}
       - RPC_PORT=${RPC_PORT:-9667}
       - RPC_USER=${RPC_USER}

@@ -215,7 +215,7 @@ func DecodeAddress(addr string, defaultNet *chaincfg.Params) (Address, error) {
 		case isP2SH:
 			return newAddressScriptHashFromHash(hash160, netID)
 		default:
-			return nil, ErrUnknownAddressType
+			return nil, fmt.Errorf("unknown address type (version byte %#x): %w", netID, ErrUnknownAddressType)
 		}
 
 	default:

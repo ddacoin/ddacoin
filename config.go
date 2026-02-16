@@ -66,8 +66,9 @@ const (
 	defaultSigCacheMaxSize       = 100000
 	defaultUtxoCacheMaxSizeMiB   = 250
 	// Low-resource defaults for DDACOIN (e.g. Raspberry Pi).
-	defaultMaxPeersDDACoin          = 16
-	defaultUtxoCacheMaxSizeMiBDDACoin = 64
+	defaultMaxPeersDDACoin             = 8
+	defaultUtxoCacheMaxSizeMiBDDACoin  = 64
+	defaultTrickleIntervalDDACoin      = 30 * time.Second // less frequent than 10s to cut CPU
 	sampleConfigFilename         = "sample-btcd.conf"
 	defaultTxIndex               = false
 	defaultAddrIndex             = false
@@ -628,13 +629,16 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// DDACOIN low-resource defaults for small devices (e.g. Raspberry Pi).
-	// Reduces peer count and UTXO cache to lower CPU and memory use.
+	// Reduces peer count, UTXO cache, and trickle frequency to lower CPU use.
 	if activeNetParams.Params.Net == wire.DDACoinNet {
 		if cfg.MaxPeers == defaultMaxPeers {
 			cfg.MaxPeers = defaultMaxPeersDDACoin
 		}
 		if cfg.UtxoCacheMaxSizeMiB == defaultUtxoCacheMaxSizeMiB {
 			cfg.UtxoCacheMaxSizeMiB = defaultUtxoCacheMaxSizeMiBDDACoin
+		}
+		if cfg.TrickleInterval == defaultTrickleInterval {
+			cfg.TrickleInterval = defaultTrickleIntervalDDACoin
 		}
 	}
 

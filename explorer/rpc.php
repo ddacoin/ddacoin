@@ -36,6 +36,13 @@ function rpc_call(array $config, string $method, array $params = []): array {
     $raw  = @file_get_contents($url, false, $ctx);
 
     if ($raw === false) {
+        $code = null;
+        if (!empty($http_response_header) && preg_match('#^HTTP/\S+\s+(\d+)#', $http_response_header[0], $m)) {
+            $code = (int) $m[1];
+        }
+        if ($code === 503) {
+            return ['error' => 'Node too busy (max RPC clients). Try again in a moment or increase --rpcmaxclients on the node.'];
+        }
         return ['error' => 'Could not connect to node. Is RPC enabled (--rpcuser/--rpcpass)?'];
     }
 

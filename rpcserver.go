@@ -566,9 +566,13 @@ func handleCreateRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan 
 		// Decode the provided address.
 		addr, err := btcutil.DecodeAddress(encodedAddr, params)
 		if err != nil {
+			msg := "Invalid address or key: " + err.Error()
+			if params.Net == wire.DDACoinNet && errors.Is(err, btcutil.ErrUnknownAddressType) {
+				msg = "Invalid address or key: address is for another network. DDACOIN addresses start with D (legacy) or dda1 (bech32)."
+			}
 			return nil, &btcjson.RPCError{
 				Code:    btcjson.ErrRPCInvalidAddressOrKey,
-				Message: "Invalid address or key: " + err.Error(),
+				Message: msg,
 			}
 		}
 
@@ -3196,9 +3200,13 @@ func handleSearchRawTransactions(s *rpcServer, cmd interface{}, closeChan <-chan
 	params := s.cfg.ChainParams
 	addr, err := btcutil.DecodeAddress(c.Address, params)
 	if err != nil {
+		msg := "Invalid address or key: " + err.Error()
+		if params.Net == wire.DDACoinNet && errors.Is(err, btcutil.ErrUnknownAddressType) {
+			msg = "Invalid address or key: address is for another network. DDACOIN addresses start with D (legacy) or dda1 (bech32)."
+		}
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCInvalidAddressOrKey,
-			Message: "Invalid address or key: " + err.Error(),
+			Message: msg,
 		}
 	}
 
@@ -3757,9 +3765,13 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	params := s.cfg.ChainParams
 	addr, err := btcutil.DecodeAddress(c.Address, params)
 	if err != nil {
+		msg := "Invalid address or key: " + err.Error()
+		if params.Net == wire.DDACoinNet && errors.Is(err, btcutil.ErrUnknownAddressType) {
+			msg = "Invalid address or key: address is for another network. DDACOIN addresses start with D (legacy) or dda1 (bech32)."
+		}
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCInvalidAddressOrKey,
-			Message: "Invalid address or key: " + err.Error(),
+			Message: msg,
 		}
 	}
 

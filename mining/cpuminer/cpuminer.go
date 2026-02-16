@@ -42,8 +42,8 @@ const (
 	// ddacoinBlockIntervalSecs is the required seconds between blocks for DDACOIN (1 hour).
 	ddacoinBlockIntervalSecs = 3600
 	// ddacoinProducerPollSecs is how often the time-based producer rechecks (seconds).
-	// Kept moderate to reduce CPU wakeups on low-power devices (e.g. Raspberry Pi).
-	ddacoinProducerPollSecs = 120
+	// Kept high to reduce CPU wakeups on low-power devices (e.g. Raspberry Pi).
+	ddacoinProducerPollSecs = 300
 	// ddacoinProducerMaxRandomDelaySecs is the max random delay (seconds) after slot time
 	// before building a block, so submission order is not purely latency-based.
 	ddacoinProducerMaxRandomDelaySecs = 300
@@ -388,11 +388,11 @@ out:
 		}
 
 		if m.cfg.ConnectedCount() == 0 {
-			time.Sleep(10 * time.Second)
+			time.Sleep(30 * time.Second)
 			continue
 		}
 		if !m.cfg.IsCurrent() {
-			time.Sleep(10 * time.Second)
+			time.Sleep(30 * time.Second)
 			continue
 		}
 

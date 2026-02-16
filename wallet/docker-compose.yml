@@ -1,0 +1,33 @@
+# DDACOIN wallet. Connects to node RPC.
+# Copy .env.example to .env and set RPC_* to match the node.
+# Run: docker compose up -d  →  http://localhost:${WALLET_PORT:-3080}
+# When the node runs in ddacoin/docker-compose.yml, use the node network so the wallet
+# can reach the node by name (RPC_HOST=ddacoin-node) without going through the host.
+
+services:
+  wallet:
+    build: .
+    container_name: ddacoin-wallet
+    ports:
+      - "${WALLET_PORT:-3080}:3080"
+    environment:
+      - RPC_HOST=${RPC_HOST:-ddacoin-node}
+      - RPC_PORT=${RPC_PORT:-9667}
+      - RPC_USER=${RPC_USER}
+      - RPC_PASS=${RPC_PASS}
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    volumes:
+      - wallet-data:/data
+    networks:
+      - default
+      - node
+    restart: unless-stopped
+
+networks:
+  default: {}
+  node:
+    external: true
+    name: ddacoin_default
+
+volumes:
+  wallet-data: {}

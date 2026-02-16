@@ -115,7 +115,7 @@ var DDACoinMainNetParams = Params{
 	Deployments: [DefinedDeployments]ConsensusDeployment{},
 	RelayNonStdTxs:           true,
 	Bech32HRPSegwit:          "dda",
-	PubKeyHashAddrID:         0x3d, // D
+	PubKeyHashAddrID:         0x1e, // D (base58 first char)
 	ScriptHashAddrID:         0x7d,
 	PrivateKeyID:             0xbd,
 	WitnessPubKeyHashAddrID:  0x0d,
