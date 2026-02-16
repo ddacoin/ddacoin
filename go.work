@@ -1,0 +1,12 @@
+go 1.22
+
+use (
+	.
+	./btcec
+	./btcutil
+	./btcutil/psbt
+	./chaincfg/chainhash
+	./v2transport
+)
+
+replace github.com/ddacoin/ddacoin/chaincfg/chainhash => ./chaincfg/chainhash

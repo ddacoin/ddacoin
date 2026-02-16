@@ -96,7 +96,7 @@ check: unit
 unit:
 	@$(call print, "Running unit tests.")
 	$(GOTEST_DEV) ./... -test.timeout=20m
-	cd btcec && $(GOTEST_DEV) ./... -test.timeout=20m
+	$(GOTEST_DEV) ./btcec/... -test.timeout=20m
 	cd btcutil && $(GOTEST_DEV) ./... -test.timeout=20m
 	cd btcutil/psbt && $(GOTEST_DEV) ./... -test.timeout=20m
 
@@ -105,9 +105,9 @@ unit-cover:
 	@$(call print, "Running unit coverage tests.")
 	$(GOTEST) $(COVER_FLAGS) ./...
 
-	# We need to remove the /v2 pathing from the module to have it work
-	# nicely with the CI tool we use to render live code coverage.
-	cd btcec && $(GOTEST) $(COVER_FLAGS) ./... && sed -i.bak 's/v2\///g' coverage.txt
+	# Run btcec tests from repo root so root go.mod's replace for chaincfg/chainhash applies (CI).
+	# Remove /v2 from coverage paths for the CI coverage tool.
+	$(GOTEST) -coverprofile=btcec/coverage.txt -covermode=atomic -coverpkg=$(PKG)/... ./btcec/... && sed -i.bak 's/v2\///g' btcec/coverage.txt
 	cd btcutil && $(GOTEST) $(COVER_FLAGS) ./...
 	cd btcutil/psbt && $(GOTEST) $(COVER_FLAGS) ./...
 
@@ -115,7 +115,7 @@ unit-cover:
 unit-race:
 	@$(call print, "Running unit race tests.")
 	env CGO_ENABLED=1 GORACE="history_size=7 halt_on_errors=1" $(GOTEST) -race -test.timeout=20m ./...
-	cd btcec && env CGO_ENABLED=1 GORACE="history_size=7 halt_on_errors=1" $(GOTEST) -race -test.timeout=20m ./...
+	env CGO_ENABLED=1 GORACE="history_size=7 halt_on_errors=1" $(GOTEST) -race -test.timeout=20m ./btcec/...
 	cd btcutil && env CGO_ENABLED=1 GORACE="history_size=7 halt_on_errors=1" $(GOTEST) -race -test.timeout=20m ./...
 	cd btcutil/psbt && env CGO_ENABLED=1 GORACE="history_size=7 halt_on_errors=1" $(GOTEST) -race -test.timeout=20m ./...
 
