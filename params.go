@@ -71,7 +71,8 @@ var sigNetParams = params{
 }
 
 // ddacoinMainNetParams contains parameters specific to the DDACOIN main network
-// (wire.DDACoinNet). Time-based consensus, port 9666, fallback peer ddacoin.kos.engineer.
+// (wire.DDACoinNet). Time-based consensus, port 9666, DNS seeds
+// ddacoinminer01.kos.engineer and ddacoinminer02.kos.engineer.
 var ddacoinMainNetParams = params{
 	Params:  &chaincfg.DDACoinMainNetParams,
 	rpcPort: "9667",

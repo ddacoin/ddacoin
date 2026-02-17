@@ -1,5 +1,5 @@
 # DDACOIN node: time-based consensus, 1 hour per block.
-# P2P port 9666, fallback peer ddacoin.kos.engineer.
+# P2P port 9666, DNS seeds ddacoinminer01.kos.engineer and ddacoinminer02.kos.engineer.
 # Copy .env.example to .env and set RPC_USER, RPC_PASS; for miner mode also set MINING_ADDR.
 #
 # Miner mode (default): docker compose up -d          → runs with --generate and --miningaddr

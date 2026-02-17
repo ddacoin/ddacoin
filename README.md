@@ -6,7 +6,7 @@ DDACOIN is a [btcd](https://github.com/btcsuite/btcd) fork that replaces proof-o
 - **Block time:** 1 hour (3600 seconds)
 - **Halving:** Time-based (e.g. every 2 years)
 - **P2P port:** 9666
-- **Fallback peer:** `ddacoin.kos.engineer:9666`
+- **DNS seeds / fallback peers:** `ddacoinminer01.kos.engineer:9666`, `ddacoinminer02.kos.engineer:9666`
 - **RPC port:** 9667 (when enabled)
 
 This repository includes:
@@ -34,7 +34,7 @@ go install -v . ./cmd/...
 # Data directory (default: platform-specific, e.g. ~/.btcd)
 ./ddacoin-node -b /path/to/data
 
-# Listen on default P2P port 9666; fallback peer ddacoin.kos.engineer is used when no other peers are available.
+# Listen on default P2P port 9666; DNS seeds ddacoinminer01.kos.engineer and ddacoinminer02.kos.engineer are used when no other peers are available.
 # Optional: enable built-in block producer (requires at least one payment address)
 ./ddacoin-node -b /path/to/data --generate --miningaddr=<address>
 ```
@@ -85,7 +85,7 @@ P2P: 9666, RPC: 9667, data: volume ddacoin-data. Credentials in `.env` are used 
 
 ## Network
 
-- **P2P:** Port **9666**. Connect to other nodes or use the hardcoded fallback **ddacoin.kos.engineer:9666** when no other peers are available.
+- **P2P:** Port **9666**. Connect to other nodes or use the hardcoded DNS seeds / fallback peers **ddacoinminer01.kos.engineer:9666** and **ddacoinminer02.kos.engineer:9666** when no other peers are available.
 - **RPC:** Port **9667** (when configured with rpcuser/rpcpass or similar).
 
 ## Wallet
