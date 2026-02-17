@@ -52,15 +52,19 @@ If you want to **mine / produce blocks**, you will also need:
 
 ## 3. Creating a DDACOIN address (for `MINING_ADDR`)
 
-You can generate a DDACOIN address directly **inside a Docker container** using the node’s `keygen` command.
+You can generate a DDACOIN address **using Docker**, without needing Go installed on your host.
 
-### 3.1 Using Docker Compose
+### 3.1 Using Docker to run `genaddress` (recommended)
 
 From the project root:
 
 ```bash
-# Run keygen once in a temporary container
-docker compose run --rm ddacoin ddacoin keygen
+docker run --rm \
+  -e GOTOOLCHAIN=go1.23.4 \
+  -v "$PWD":/src \
+  -w /src \
+  golang:1.22 \
+  go run ./cmd/genaddress
 ```
 
 This prints something like:
@@ -157,39 +161,37 @@ In this mode:
 
 ---
 
-## 5. Generating addresses or keys later (from a running container)
+## 5. Generating addresses or keys later
 
-If you already have the node running (e.g. via `docker compose up -d`), you can still run `keygen` inside the existing container.
+If you already have the node running (e.g. via `docker compose up -d`), you can still generate **additional payout addresses**.
 
-Open a shell in the container:
-
-```bash
-docker exec -it ddacoin-node bash
-```
-
-Then inside the container:
+The simplest way is to **re‑run the Docker `genaddress` helper** from section 3.1 in another terminal:
 
 ```bash
-ddacoin keygen
-# or, if it requires the data directory explicitly:
-ddacoin -b /data keygen
+cd /path/to/ddacoin
+docker run --rm \
+  -e GOTOOLCHAIN=go1.23.4 \
+  -v "$PWD":/src \
+  -w /src \
+  golang:1.22 \
+  go run ./cmd/genaddress
 ```
 
-Again, take the **address** for new payouts, and back up the **WIF** securely.
+Take the new **address** for payouts, and back up the **WIF** securely (offline, password manager, paper, etc.).
 
 ---
 
 ## 6. Network overview (for Docker users)
 
-- **P2P:** Port **9666** (mapped from the container). Nodes connect to peers and/or use DNS seeds:  
+- **P2P:** Port **9666** (mapped from the container). This is the port you typically expose to the public internet so other DDACOIN nodes can connect to you. Nodes connect to peers and/or use DNS seeds:  
   - `ddacoinminer01.kos.engineer:9666`  
   - `ddacoinminer02.kos.engineer:9666`  
-- **RPC:** Port **9667** (mapped from the container). Used by:  
+- **RPC:** Port **9667** (mapped from the container). **Do not expose this port directly to the public internet.** Keep it firewalled or bound to a private network, and access it only from:  
   - Wallet (from `wallet/`)  
   - Explorer (from `explorer/`)  
   - Your own tools/scripts  
 
-With Docker Compose, services on the `ddacoin-net` network can reach the node at host `ddacoin-node:9667`.
+With Docker Compose, services on the `ddacoin-net` network can reach the node at host `ddacoin-node:9667` without opening the RPC port to the wider internet.
 
 ---
 
