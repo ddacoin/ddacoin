@@ -98,6 +98,12 @@ A PHP-based blockchain explorer lives in [explorer/](explorer/). It shows chain 
 
 **Live explorer:** [https://ddacoin.kos.engineer/](https://ddacoin.kos.engineer/)
 
+## Donate
+
+If you’d like to support DDACOIN development, you can send DDACOIN to:
+
+**`DP3s7GpEPuiuJZGnRKH1DBQr3mgDVo9Afz`**
+
 ## License
 
 ISC (see [LICENSE](LICENSE)).
