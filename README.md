@@ -1,109 +1,217 @@
-# DDACOIN
+# DDACOIN (Docker-only usage)
 
-DDACOIN is a [btcd](https://github.com/btcsuite/btcd) fork that replaces proof-of-work with **time-based consensus**: a block is valid if its timestamp is at least 1 hour after the previous block and not in the future; the first peer to submit a valid block wins. No mining puzzle.
+DDACOIN is a [btcd](https://github.com/btcsuite/btcd) fork that replaces proof‑of‑work with **time‑based consensus**: a block is valid if its timestamp is at least 1 hour after the previous block and not in the future; the first peer to submit a valid block wins. There is **no mining puzzle**.
 
-- **Max supply:** 2,000,000 DDACOIN (1 DDACOIN = 10^8 subunits)
-- **Block time:** 1 hour (3600 seconds)
-- **Halving:** Time-based (e.g. every 2 years)
-- **P2P port:** 9666
-- **DNS seeds / fallback peers:** `ddacoinminer01.kos.engineer:9666`, `ddacoinminer02.kos.engineer:9666`
-- **RPC port:** 9667 (when enabled)
+- **Max supply:** 2,000,000 DDACOIN (1 DDACOIN = 10^8 subunits)  
+- **Block time:** 1 hour (3600 seconds)  
+- **P2P port:** 9666  
+- **RPC port:** 9667 (when enabled)  
 
 This repository includes:
 
-- **Node** (this directory) – DDACOIN full node and RPC server
-- **[Wallet](wallet/)** – Web wallet (HD/BIP39, P2PKH addresses, send/receive) – see [wallet/README.md](wallet/README.md)
-- **[Explorer](explorer/)** – PHP blockchain explorer (blocks, transactions, chain info) – see [explorer/README.md](explorer/README.md)
+- **Node** – DDACOIN full node and RPC server (this directory)
+- **Wallet** – Web wallet (HD/BIP39, send/receive) in `wallet/`
+- **Explorer** – PHP blockchain explorer in `explorer/`
 
-## Requirements
+This README describes **only Docker-based usage of the node**, including how to **create a DDACOIN address** for mining.
 
-[Go](https://golang.org) 1.22 or newer.
+---
 
-## Build
+## 1. Prerequisites
 
-```bash
-go build -o ddacoin-node .
-# or
-go install -v . ./cmd/...
-# binary: ddacoin (or ddacoin-node if built as above)
-```
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/) (v2+)
 
-## Run (binary)
+Clone the repository:
 
 ```bash
-# Data directory (default: platform-specific, e.g. ~/.btcd)
-./ddacoin-node -b /path/to/data
-
-# Listen on default P2P port 9666; DNS seeds ddacoinminer01.kos.engineer and ddacoinminer02.kos.engineer are used when no other peers are available.
-# Optional: enable built-in block producer (requires at least one payment address)
-./ddacoin-node -b /path/to/data --generate --miningaddr=<address>
+git clone https://github.com/your-org/ddacoin.git
+cd ddacoin
 ```
 
-## Run (Docker)
+---
+
+## 2. Environment file
+
+Copy the example environment file and set your credentials:
 
 ```bash
-# Build image
-docker build . -t ddacoin
-
-# Run node (persist chain in volume)
-docker run -v ddacoin-data:/data -p 9666:9666 -p 9667:9667 ddacoin
-
-# With block producer
-docker run -v ddacoin-data:/data -p 9666:9666 -p 9667:9667 \
-  ddacoin -b /data --generate --miningaddr=<address>
+cp .env.example .env
 ```
 
-## Docker Compose
+Edit `.env` and set at least:
 
-### Generating a wallet address (before building the container)
+- `RPC_USER` – RPC username  
+- `RPC_PASS` – RPC password  
 
-If you want a mining payout address before you build or run the Docker container, generate one on the host (requires [Go](https://golang.org) 1.22+):
+If you want to **mine / produce blocks**, you will also need:
+
+- `MINING_ADDR` – a DDACOIN address (see next section)
+
+---
+
+## 3. Creating a DDACOIN address (for `MINING_ADDR`)
+
+You can generate a DDACOIN address directly **inside a Docker container** using the node’s `keygen` command.
+
+### 3.1 Using Docker Compose
+
+From the project root:
 
 ```bash
-go run ./cmd/genaddress
+# Run keygen once in a temporary container
+docker compose run --rm ddacoin ddacoin keygen
 ```
 
-This prints a DDACOIN address (starts with **D**) and a WIF private key. Put the **address** in `MINING_ADDR` in your `.env`; back up the **WIF** securely (e.g. to import later in the [web wallet](wallet/README.md)). You can also create a wallet in the web wallet and use its receive address instead.
+This prints something like:
 
-### Running with Compose
+- A **DDACOIN address** (starts with `D`)
+- A **WIF private key**
 
-Copy `.env.example` to `.env` and set `RPC_USER` and `RPC_PASS`. Then choose a mode:
+Use the printed **address** as your `MINING_ADDR` value in `.env`, for example:
 
-**Miner mode** (sync + produce blocks; requires `MINING_ADDR` in `.env`):
+```env
+MINING_ADDR=DP3s7GpEPuiuJZGnRKH1DBQr3mgDVo9Afz
+```
+
+**Important:**
+
+- Back up the **WIF private key** securely (offline, password manager, paper, etc.).  
+- Do **not** share the WIF; anyone with it can spend your coins.
+
+### 3.2 (Optional) Using the web wallet
+
+Alternatively, you can:
+
+1. Run the web wallet (see `wallet/README.md`).  
+2. Create a new wallet and copy one of its **receive addresses**.  
+3. Use that address as `MINING_ADDR` in `.env`.  
+
+---
+
+## 4. Running the node with Docker Compose
+
+DDACOIN comes with a `docker-compose.yml` that runs the node in Docker and stores blockchain data in a named volume.
+
+### 4.1 Miner mode (default)
+
+**Miner mode** runs a full node **and** produces blocks, paying rewards to `MINING_ADDR`.
+
+Requirements:
+
+- `.env` file with:  
+  - `RPC_USER`, `RPC_PASS`  
+  - `MINING_ADDR` (as created in section 3)
+
+Start the node:
 
 ```bash
 docker compose up -d
 ```
 
-**Node-only mode** (sync and relay only; no block production; `MINING_ADDR` not needed):
+This will:
+
+- Build and run the `ddacoin` image (if not already built).  
+- Expose:  
+  - **P2P** on `9666`  
+  - **RPC** on `9667`  
+- Use the `ddacoin-data` volume for persistent blockchain data.  
+- Start the node with:  
+  - Block production enabled (`--generate`)  
+  - Mining address set from `MINING_ADDR`  
+  - Indexes enabled (`--txindex`, `--addrindex`)  
+  - RPC listening on `0.0.0.0:9667`  
+
+Check logs:
+
+```bash
+docker compose logs -f ddacoin
+```
+
+Stop the node:
+
+```bash
+docker compose down
+```
+
+Data in the `ddacoin-data` volume is preserved across restarts.
+
+### 4.2 Node‑only mode (no mining)
+
+If you want a node that **syncs and relays blocks/transactions** but **does not produce blocks**, use the node‑only override file.
+
+Start in node‑only mode:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.node.yml up -d
 ```
 
-P2P: 9666, RPC: 9667, data: volume ddacoin-data. Credentials in `.env` are used by the explorer as well.
+In this mode:
 
-## Network
+- `MINING_ADDR` is **not** required.  
+- The node does **not** run `--generate`.  
+- P2P/RPC ports and data volume are the same:  
+  - P2P: `9666`  
+  - RPC: `9667`  
+  - Volume: `ddacoin-data`  
 
-- **P2P:** Port **9666**. Connect to other nodes or use the hardcoded DNS seeds / fallback peers **ddacoinminer01.kos.engineer:9666** and **ddacoinminer02.kos.engineer:9666** when no other peers are available.
-- **RPC:** Port **9667** (when configured with rpcuser/rpcpass or similar).
+---
 
-## Wallet
+## 5. Generating addresses or keys later (from a running container)
 
-A web wallet lives in the [wallet/](wallet/) directory. It provides an HD wallet (BIP39/BIP44), P2PKH addresses (starting with **D**), balance and send via the node RPC. Run it with Docker from `wallet/` (see [wallet/README.md](wallet/README.md)). The node must have RPC enabled and `--addrindex` for balance and history.
+If you already have the node running (e.g. via `docker compose up -d`), you can still run `keygen` inside the existing container.
 
-## Explorer
+Open a shell in the container:
 
-A PHP-based blockchain explorer lives in [explorer/](explorer/). It shows chain info, latest blocks, block details, and transactions. Run it with Docker from `explorer/` (see [explorer/README.md](explorer/README.md)). It connects to the node’s RPC (port 9667).
+```bash
+docker exec -it ddacoin-node bash
+```
 
-**Live explorer:** [https://ddacoin.kos.engineer/](https://ddacoin.kos.engineer/)
+Then inside the container:
 
-## Donate
+```bash
+ddacoin keygen
+# or, if it requires the data directory explicitly:
+ddacoin -b /data keygen
+```
+
+Again, take the **address** for new payouts, and back up the **WIF** securely.
+
+---
+
+## 6. Network overview (for Docker users)
+
+- **P2P:** Port **9666** (mapped from the container). Nodes connect to peers and/or use DNS seeds:  
+  - `ddacoinminer01.kos.engineer:9666`  
+  - `ddacoinminer02.kos.engineer:9666`  
+- **RPC:** Port **9667** (mapped from the container). Used by:  
+  - Wallet (from `wallet/`)  
+  - Explorer (from `explorer/`)  
+  - Your own tools/scripts  
+
+With Docker Compose, services on the `ddacoin-net` network can reach the node at host `ddacoin-node:9667`.
+
+---
+
+## 7. Wallet and Explorer (Docker)
+
+The **web wallet** and **explorer** have their own Docker setups and READMEs:
+
+- `wallet/` – Web wallet; see `wallet/README.md` for Docker instructions.  
+- `explorer/` – PHP explorer; see `explorer/README.md` for Docker instructions.  
+
+They are designed to connect to the node’s RPC endpoint exposed on port `9667`.
+
+---
+
+## 8. Donate
 
 If you’d like to support DDACOIN development, you can send DDACOIN to:
 
 **`DP3s7GpEPuiuJZGnRKH1DBQr3mgDVo9Afz`**
 
-## License
+---
 
-ISC (see [LICENSE](LICENSE)).
+## 9. License
+
+ISC (see `LICENSE`).
