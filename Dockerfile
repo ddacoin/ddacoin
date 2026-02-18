@@ -5,7 +5,7 @@
 # Run:   docker run -v ddacoin-data:/data -p 9666:9666 -p 9667:9667 ddacoin
 # Optional block producer: add --generate --miningaddr=<address>
 
-ARG ARCH=amd64
+ARG ARCH=
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETPLATFORM
@@ -22,9 +22,16 @@ RUN set -ex \
        if [ "${ARCH}" = "arm32v7" ]; then export GOARCH=arm; export GOARM=7; fi; \
        if [ "${ARCH}" = "arm64v8" ]; then export GOARCH=arm64; fi; \
      else \
-       if [ "${TARGETARCH}" = "amd64" ]; then export GOARCH=amd64; fi; \
-       if [ "${TARGETARCH}" = "arm" ]; then export GOARCH=arm; export GOARM=7; fi; \
-       if [ "${TARGETARCH}" = "arm64" ]; then export GOARCH=arm64; fi; \
+       if [ -n "${TARGETARCH}" ]; then \
+         if [ "${TARGETARCH}" = "amd64" ]; then export GOARCH=amd64; fi; \
+         if [ "${TARGETARCH}" = "arm" ]; then export GOARCH=arm; export GOARM=7; fi; \
+         if [ "${TARGETARCH}" = "arm64" ]; then export GOARCH=arm64; fi; \
+       else \
+         arch="$(uname -m)"; \
+         if [ "${arch}" = "x86_64" ]; then export GOARCH=amd64; fi; \
+         if [ "${arch}" = "aarch64" ]; then export GOARCH=arm64; fi; \
+         if [ "${arch}" = "armv7l" ] || [ "${arch}" = "armv6l" ]; then export GOARCH=arm; export GOARM=7; fi; \
+       fi; \
      fi \
   && echo "Compiling for $GOARCH" \
   && GOOS=${TARGETOS:-linux} go build -buildvcs=false -o /bin/ddacoin .
