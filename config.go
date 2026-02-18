@@ -70,6 +70,11 @@ const (
 	defaultTargetOutboundDDACoin       = 6
 	defaultUtxoCacheMaxSizeMiBDDACoin  = 64
 	defaultTrickleIntervalDDACoin      = 30 * time.Second // less frequent than 10s to cut CPU
+	// High-power defaults for DDACOIN.
+	defaultHighPowerMaxPeersDDACoin            = 64
+	defaultHighPowerTargetOutboundDDACoin      = 16
+	defaultHighPowerUtxoCacheMaxSizeMiBDDACoin = defaultUtxoCacheMaxSizeMiB
+	defaultHighPowerTrickleIntervalDDACoin     = defaultTrickleInterval
 	sampleConfigFilename         = "sample-btcd.conf"
 	defaultTxIndex               = false
 	defaultAddrIndex             = false
@@ -134,7 +139,8 @@ type config struct {
 	LogDir               string        `long:"logdir" description:"Directory to log output."`
 	MaxOrphanTxs         int           `long:"maxorphantx" description:"Max number of orphan transactions to keep in memory"`
 	MaxPeers             int           `long:"maxpeers" description:"Max number of inbound and outbound peers"`
-	TargetOutbound       int           `long:"targetoutbound" description:"Target number of outbound connections (0 = use default, DDACOIN default 2)"`
+	TargetOutbound       int           `long:"targetoutbound" description:"Target number of outbound connections (0 = use default, DDACOIN default 6)"`
+	HighPower            bool          `long:"highpower" description:"Enable high-power defaults for DDACOIN (more peers and larger caches)"`
 	MiningAddrs          []string      `long:"miningaddr" description:"Add the specified payment address to the list of addresses to use for generated blocks -- At least one address is required if the generate option is set"`
 	MinRelayTxFee        float64       `long:"minrelaytxfee" description:"The minimum transaction fee in BTC/kB to be considered a non-zero fee."`
 	DisableBanning       bool          `long:"nobanning" description:"Disable banning of misbehaving peers"`
@@ -644,6 +650,20 @@ func loadConfig() (*config, []string, error) {
 		}
 		if cfg.TrickleInterval == defaultTrickleInterval {
 			cfg.TrickleInterval = defaultTrickleIntervalDDACoin
+		}
+		if cfg.HighPower {
+			if cfg.MaxPeers == defaultMaxPeersDDACoin {
+				cfg.MaxPeers = defaultHighPowerMaxPeersDDACoin
+			}
+			if cfg.TargetOutbound == defaultTargetOutboundDDACoin {
+				cfg.TargetOutbound = defaultHighPowerTargetOutboundDDACoin
+			}
+			if cfg.UtxoCacheMaxSizeMiB == defaultUtxoCacheMaxSizeMiBDDACoin {
+				cfg.UtxoCacheMaxSizeMiB = defaultHighPowerUtxoCacheMaxSizeMiBDDACoin
+			}
+			if cfg.TrickleInterval == defaultTrickleIntervalDDACoin {
+				cfg.TrickleInterval = defaultHighPowerTrickleIntervalDDACoin
+			}
 		}
 	}
 
