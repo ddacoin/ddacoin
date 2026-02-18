@@ -14,3 +14,4 @@ services:
       - "--rpcmaxclients=20"
       - "--txindex"
       - "--addrindex"
+      - "${HIGHPOWER:+--highpower}"
