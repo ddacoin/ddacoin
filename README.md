@@ -202,6 +202,11 @@ The **web wallet** and **explorer** have their own Docker setups and READMEs:
 - `wallet/` – Web wallet; see `wallet/README.md` for Docker instructions.  
 - `explorer/` – PHP explorer; see `explorer/README.md` for Docker instructions.  
 
+Public endpoints:
+
+- Explorer: https://explorer.ddacoin.kos.engineer/
+- Wallet: https://explorer.ddacoin.kos.engineer/
+
 They are designed to connect to the node’s RPC endpoint exposed on port `9667`.
 
 ---
