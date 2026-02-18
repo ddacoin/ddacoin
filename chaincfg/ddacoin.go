@@ -93,6 +93,7 @@ var DDACoinMainNetParams = Params{
 	DNSSeeds: []DNSSeed{
 		{Host: "ddacoinminer01.kos.engineer", HasFiltering: false},
 		{Host: "ddacoinminer02.kos.engineer", HasFiltering: false},
+		{Host: "ddacoinminer03.kos.engineer", HasFiltering: false},
 	},
 	GenesisBlock:             &ddacoinGenesisBlock,
 	GenesisHash:              &ddacoinGenesisHash,
