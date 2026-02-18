@@ -6,20 +6,30 @@
 # Optional block producer: add --generate --miningaddr=<address>
 
 ARG ARCH=amd64
-FROM golang@sha256:4bb4be21ac98da06bc26437ee870c4973f8039f13e9a1a36971b4517632b0fc6 AS build-container
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+FROM --platform=$BUILDPLATFORM golang:1.23-alpine AS build-container
 
 ARG ARCH
 
 ADD . /app
 WORKDIR /app
 RUN set -ex \
-  && if [ "${ARCH}" = "amd64" ]; then export GOARCH=amd64; fi \
-  && if [ "${ARCH}" = "arm32v7" ]; then export GOARCH=arm; fi \
-  && if [ "${ARCH}" = "arm64v8" ]; then export GOARCH=arm64; fi \
+  && if [ -n "${ARCH}" ]; then \
+       if [ "${ARCH}" = "amd64" ]; then export GOARCH=amd64; fi; \
+       if [ "${ARCH}" = "arm32v7" ]; then export GOARCH=arm; export GOARM=7; fi; \
+       if [ "${ARCH}" = "arm64v8" ]; then export GOARCH=arm64; fi; \
+     else \
+       if [ "${TARGETARCH}" = "amd64" ]; then export GOARCH=amd64; fi; \
+       if [ "${TARGETARCH}" = "arm" ]; then export GOARCH=arm; export GOARM=7; fi; \
+       if [ "${TARGETARCH}" = "arm64" ]; then export GOARCH=arm64; fi; \
+     fi \
   && echo "Compiling for $GOARCH" \
-  && go build -buildvcs=false -o /bin/ddacoin .
+  && GOOS=${TARGETOS:-linux} go build -buildvcs=false -o /bin/ddacoin .
 
-FROM $ARCH/alpine:3.21
+FROM --platform=$TARGETPLATFORM alpine:3.21
 
 COPY --from=build-container /bin/ddacoin /bin/ddacoin
 
