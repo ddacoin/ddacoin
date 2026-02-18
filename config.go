@@ -71,7 +71,7 @@ const (
 	defaultUtxoCacheMaxSizeMiBDDACoin  = 64
 	defaultTrickleIntervalDDACoin      = 30 * time.Second // less frequent than 10s to cut CPU
 	// High-power defaults for DDACOIN.
-	defaultHighPowerMaxPeersDDACoin            = 64
+	defaultHighPowerMaxPeersDDACoin            = defaultMaxPeers * 2
 	defaultHighPowerTargetOutboundDDACoin      = 16
 	defaultHighPowerUtxoCacheMaxSizeMiBDDACoin = defaultUtxoCacheMaxSizeMiB
 	defaultHighPowerTrickleIntervalDDACoin     = defaultTrickleInterval
