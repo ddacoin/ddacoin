@@ -28,7 +28,7 @@ services:
       - "--rpcmaxclients=20"
       - "--txindex"
       - "--addrindex"
-      - "${HIGHPOWER:-}"
+      - "${HIGHPOWER:+--highpower}"
       - "--generate"
       - "--miningaddr=${MINING_ADDR}"
     restart: unless-stopped
