@@ -1,0 +1,4 @@
+# DDACOIN seed list (host[:port], one per line).
+# Default port is 9666 if omitted.
+ddacoinminer01.kos.engineer
+ddacoinminer02.kos.engineer
