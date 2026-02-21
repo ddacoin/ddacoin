@@ -24,6 +24,7 @@ Web wallet for DDACOIN: HD wallet (BIP39/BIP44), balance and send via node RPC. 
 
 - **RPC_HOST** – Node host (default `host.docker.internal` when the node runs on the host).
 - **DDACOIN_NETWORK** – `mainnet` (default) or `testnet`.
+- **NODE_DOCKER_NETWORK** – External Docker network shared with node (`ddacoin-net` mainnet, `ddacoin-testnet-net` testnet).
 - **RPC_PORT** – Node RPC port (defaults by network: `9667` mainnet, `19667` testnet).
 - **RPC_USER** / **RPC_PASS** – Must match the node’s `--rpcuser` / `--rpcpass`.
 - **WALLET_PORT** – Host port for the wallet UI/API (default `3080`).
@@ -34,8 +35,15 @@ Web wallet for DDACOIN: HD wallet (BIP39/BIP44), balance and send via node RPC. 
 
 1. **Start the node** – From the repo root: `docker compose up -d` (or ensure the node is running).
 2. **Create `wallet/.env`** – Copy `wallet/.env.example` to `wallet/.env` and set `RPC_USER` and `RPC_PASS` to the same values as the node (e.g. from the root `.env`).
-3. **Node must listen on all interfaces** – The node must be started with `--rpclisten=0.0.0.0:9667` so the wallet container can connect (the root `docker-compose.yml` already does this).
+3. **Node must listen on all interfaces** – Mainnet default is `--rpclisten=0.0.0.0:9667`; testnet is `--rpclisten=0.0.0.0:19667`.
 4. **On Linux** – If the wallet cannot resolve `host.docker.internal`, set `RPC_HOST=172.17.0.1` in `wallet/.env`.
+
+For testnet via Docker service name, use:
+
+- `DDACOIN_NETWORK=testnet`
+- `NODE_DOCKER_NETWORK=ddacoin-testnet-net`
+- `RPC_HOST=ddacoin-testnet-node`
+- `RPC_USER` / `RPC_PASS` matching `.env.testnet`
 
 ### Address formats by network
 
