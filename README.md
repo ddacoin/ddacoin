@@ -25,7 +25,7 @@ This README describes **only Docker-based usage of the node**, including how to 
 Clone the repository:
 
 ```bash
-git clone https://github.com/your-org/ddacoin.git
+git clone https://github.com/ddacoin/ddacoin.git
 cd ddacoin
 ```
 
