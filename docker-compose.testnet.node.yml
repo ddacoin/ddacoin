@@ -1,7 +1,7 @@
 # DDACOIN testnet node-only override (no block production).
 # Usage:
 # docker compose --project-name ddacoin-testnet --env-file .env.testnet \
-#   -f docker-compose.yml -f docker-compose.testnet.yml -f docker-compose.testnet.node.yml up -d
+#   -f docker-compose.testnet.yml -f docker-compose.testnet.node.yml up -d
 #
 # MINING_ADDR is not required when using this override.
 

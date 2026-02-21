@@ -269,14 +269,14 @@ docker run --rm -v "$PWD":/src -w /src golang:1.23.4 go run ./cmd/genaddress --d
 
 ```bash
 docker compose --project-name ddacoin-testnet --env-file .env.testnet \
-  -f docker-compose.yml -f docker-compose.testnet.yml up -d
+  -f docker-compose.testnet.yml up -d
 ```
 
 #### Testnet node-only mode (no mining)
 
 ```bash
 docker compose --project-name ddacoin-testnet --env-file .env.testnet \
-  -f docker-compose.yml -f docker-compose.testnet.yml -f docker-compose.testnet.node.yml up -d
+  -f docker-compose.testnet.yml -f docker-compose.testnet.node.yml up -d
 ```
 
 In node-only mode, `MINING_ADDR` is not required.

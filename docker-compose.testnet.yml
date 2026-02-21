@@ -1,12 +1,14 @@
-# DDACOIN testnet override.
+# DDACOIN testnet stack (standalone compose file).
 # Usage:
 # docker compose --project-name ddacoin-testnet --env-file .env.testnet \
-#   -f docker-compose.yml -f docker-compose.testnet.yml up -d
+#   -f docker-compose.testnet.yml up -d
 #
-# This file is intended to run alongside a mainnet stack on the same server.
+# This file is intended to run alongside a separate mainnet stack on the same server.
 
 services:
   ddacoin:
+    build: .
+    image: ddacoin:latest
     container_name: ddacoin-testnet-node
     ports:
       - "19666:19666"   # P2P (testnet)
@@ -29,6 +31,7 @@ services:
       - "${NO_IPV6:+--noipv6}"
       - "--generate"
       - "--miningaddr=${MINING_ADDR}"
+    restart: unless-stopped
 
 networks:
   ddacoin-testnet-net:
