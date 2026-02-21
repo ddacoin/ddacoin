@@ -22,7 +22,7 @@ Web wallet for DDACOIN: HD wallet (BIP39/BIP44), balance and send via node RPC. 
 
 ## Configuration (`.env`)
 
-- **RPC_HOST** – Node host (default `host.docker.internal` when the node runs on the host).
+- **RPC_HOST** – Node host (defaults by network: `ddacoin-node` mainnet, `ddacoin-testnet-node` testnet).
 - **DDACOIN_NETWORK** – `mainnet` (default) or `testnet`.
 - **NODE_DOCKER_NETWORK** – External Docker network shared with node (`ddacoin-net` mainnet, `ddacoin-testnet-net` testnet).
 - **RPC_PORT** – Node RPC port (defaults by network: `9667` mainnet, `19667` testnet).

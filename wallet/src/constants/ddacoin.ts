@@ -64,3 +64,7 @@ export function getActiveWalletCoinConfig() {
 export function getActiveWalletRpcDefaultPort(): number {
   return walletNetworkNameFromEnv() === 'testnet' ? 19667 : 9667;
 }
+
+export function getActiveWalletRpcDefaultHost(): string {
+  return walletNetworkNameFromEnv() === 'testnet' ? 'ddacoin-testnet-node' : 'ddacoin-node';
+}

@@ -27,7 +27,11 @@ import {
   isValidAddressForActiveNetwork,
   toSubunits,
 } from './wallet.js';
-import { getActiveWalletRpcDefaultPort, walletNetworkNameFromEnv } from './constants/ddacoin.js';
+import {
+  getActiveWalletRpcDefaultHost,
+  getActiveWalletRpcDefaultPort,
+  walletNetworkNameFromEnv,
+} from './constants/ddacoin.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -45,9 +49,10 @@ const SESSION_COOKIE = 'wallet_session';
 
 function getRpcConfig(): RpcConfig {
   const useHttps = process.env.RPC_USE_HTTPS !== '0' && process.env.RPC_USE_HTTPS !== 'false';
+  const defaultRpcHost = getActiveWalletRpcDefaultHost();
   const defaultRpcPort = getActiveWalletRpcDefaultPort();
   return {
-    host: process.env.RPC_HOST || 'host.docker.internal',
+    host: process.env.RPC_HOST || defaultRpcHost,
     port: Number(process.env.RPC_PORT) || defaultRpcPort,
     user: process.env.RPC_USER || '',
     pass: process.env.RPC_PASS || '',
