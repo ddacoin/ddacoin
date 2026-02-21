@@ -12,6 +12,15 @@ export const DDACOIN = {
   bip44Path: (index: number) => `m/44'/56748'/0'/0/${index}`,
 } as const;
 
+export const DDACOIN_TESTNET = {
+  /** 1 DDACOIN = 10^8 subunits (like Bitcoin) */
+  decimals: 8,
+  /** BIP44 coin type for testnet */
+  coinType: 1,
+  /** Derivation path: m/44'/1'/0'/0/index */
+  bip44Path: (index: number) => `m/44'/1'/0'/0/${index}`,
+} as const;
+
 /** Bitcoinjs-lib network object for DDACOIN mainnet (matches chaincfg/ddacoin.go) */
 export const ddacoinNetwork = {
   messagePrefix: '\x18DDACOIN Signed Message:\n',
@@ -38,11 +47,20 @@ export const ddacoinTestnetNetwork = {
   wif: 0xef,
 };
 
-/** Networks that decode to DDACOIN addresses (for WIF import). Accept DDACOIN (0xbd), Bitcoin mainnet (0x80), and testnet (0xef) WIFs. */
-export const wifImportNetworks = [
-  ddacoinNetwork,
-  { ...ddacoinNetwork, wif: 0x80 } as typeof ddacoinNetwork,  // Bitcoin mainnet WIF
-  { ...ddacoinNetwork, wif: 0xef } as typeof ddacoinNetwork,  // Testnet WIF
-];
+export type DDACOINWalletNetworkName = 'mainnet' | 'testnet';
 
-export const RPC_DEFAULT_PORT = 9667;
+export function walletNetworkNameFromEnv(): DDACOINWalletNetworkName {
+  return process.env.DDACOIN_NETWORK === 'testnet' ? 'testnet' : 'mainnet';
+}
+
+export function getActiveWalletNetwork() {
+  return walletNetworkNameFromEnv() === 'testnet' ? ddacoinTestnetNetwork : ddacoinNetwork;
+}
+
+export function getActiveWalletCoinConfig() {
+  return walletNetworkNameFromEnv() === 'testnet' ? DDACOIN_TESTNET : DDACOIN;
+}
+
+export function getActiveWalletRpcDefaultPort(): number {
+  return walletNetworkNameFromEnv() === 'testnet' ? 19667 : 9667;
+}

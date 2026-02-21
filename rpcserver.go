@@ -568,10 +568,11 @@ func handleCreateRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan 
 		if err != nil {
 			msg := "Invalid address or key: " + err.Error()
 			if chaincfg.IsDDACoinNet(params) && errors.Is(err, btcutil.ErrUnknownAddressType) {
-				msg = fmt.Sprintf(
-					"Invalid address or key: address is for another network. Expected bech32 prefix %s1 for this DDACOIN network.",
-					params.Bech32HRPSegwit,
-				)
+				if params.Net == wire.DDACoinTestNet {
+					msg = "Invalid address or key: address is for another network. Expected DDACOIN testnet address (legacy m/n/2 or bech32 tdda1...)."
+				} else {
+					msg = "Invalid address or key: address is for another network. Expected DDACOIN mainnet address (legacy D or bech32 dda1...)."
+				}
 			}
 			return nil, &btcjson.RPCError{
 				Code:    btcjson.ErrRPCInvalidAddressOrKey,
@@ -3205,10 +3206,11 @@ func handleSearchRawTransactions(s *rpcServer, cmd interface{}, closeChan <-chan
 	if err != nil {
 		msg := "Invalid address or key: " + err.Error()
 		if chaincfg.IsDDACoinNet(params) && errors.Is(err, btcutil.ErrUnknownAddressType) {
-			msg = fmt.Sprintf(
-				"Invalid address or key: address is for another network. Expected bech32 prefix %s1 for this DDACOIN network.",
-				params.Bech32HRPSegwit,
-			)
+			if params.Net == wire.DDACoinTestNet {
+				msg = "Invalid address or key: address is for another network. Expected DDACOIN testnet address (legacy m/n/2 or bech32 tdda1...)."
+			} else {
+				msg = "Invalid address or key: address is for another network. Expected DDACOIN mainnet address (legacy D or bech32 dda1...)."
+			}
 		}
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCInvalidAddressOrKey,
@@ -3773,10 +3775,11 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	if err != nil {
 		msg := "Invalid address or key: " + err.Error()
 		if chaincfg.IsDDACoinNet(params) && errors.Is(err, btcutil.ErrUnknownAddressType) {
-			msg = fmt.Sprintf(
-				"Invalid address or key: address is for another network. Expected bech32 prefix %s1 for this DDACOIN network.",
-				params.Bech32HRPSegwit,
-			)
+			if params.Net == wire.DDACoinTestNet {
+				msg = "Invalid address or key: address is for another network. Expected DDACOIN testnet address (legacy m/n/2 or bech32 tdda1...)."
+			} else {
+				msg = "Invalid address or key: address is for another network. Expected DDACOIN mainnet address (legacy D or bech32 dda1...)."
+			}
 		}
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCInvalidAddressOrKey,

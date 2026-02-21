@@ -8,7 +8,7 @@ import BIP32Module from 'bip32';
 import * as ecc from 'tiny-secp256k1';
 import ECPairModule from 'ecpair';
 import * as bitcoin from 'bitcoinjs-lib';
-import { ddacoinNetwork, DDACOIN } from './constants/ddacoin.js';
+import { getActiveWalletCoinConfig, getActiveWalletNetwork } from './constants/ddacoin.js';
 import type { SearchRawTxResult } from './rpc.js';
 
 const require = createRequire(import.meta.url);
@@ -19,6 +19,10 @@ const BIP32Factory = typeof BIP32Module === 'function' ? BIP32Module : (BIP32Mod
 const ECPairFactory = typeof ECPairModule === 'function' ? ECPairModule : (ECPairModule as { default: (e: unknown) => unknown }).default;
 const bip32 = (BIP32Factory as (e: unknown) => { fromSeed(seed: Buffer): { derivePath(p: string): { privateKey?: Buffer; publicKey: Buffer } } })(ecc);
 const ECPair = (ECPairFactory as (e: unknown) => { fromPrivateKey(priv: Buffer, opts?: { network?: unknown; compressed?: boolean }): bitcoin.Signer })(ecc);
+
+function getActiveNetwork(): bitcoin.Network {
+  return getActiveWalletNetwork() as bitcoin.Network;
+}
 
 /** Generate a new BIP39 mnemonic (12 words) */
 export function generateMnemonic(): string {
@@ -34,13 +38,13 @@ export function validateMnemonic(mnemonic: string): boolean {
 export function getAddressFromMnemonic(mnemonic: string, index = 0): { address: string; pubkey: Buffer; path: string } {
   const seed = bip39.mnemonicToSeedSync(mnemonic);
   const root = bip32.fromSeed(seed);
-  const path = DDACOIN.bip44Path(index);
+  const path = getActiveWalletCoinConfig().bip44Path(index);
   const child = root.derivePath(path);
   if (!child.privateKey) throw new Error('No private key');
   const pubkey = child.publicKey;
   const payment = bitcoin.payments.p2pkh({
     pubkey,
-    network: ddacoinNetwork as bitcoin.Network,
+    network: getActiveNetwork(),
   });
   if (!payment.address) throw new Error('Failed to derive address');
   return { address: payment.address, pubkey, path };
@@ -50,12 +54,14 @@ export function getAddressFromMnemonic(mnemonic: string, index = 0): { address: 
 function getKeyPairFromMnemonic(mnemonic: string, index: number) {
   const seed = bip39.mnemonicToSeedSync(mnemonic);
   const root = bip32.fromSeed(seed);
-  const child = root.derivePath(DDACOIN.bip44Path(index));
+  const child = root.derivePath(getActiveWalletCoinConfig().bip44Path(index));
   if (!child.privateKey) throw new Error('No private key');
-  return ECPair.fromPrivateKey(child.privateKey, { network: ddacoinNetwork as bitcoin.Network });
+  return ECPair.fromPrivateKey(child.privateKey, { network: getActiveNetwork() });
 }
 
-const network = ddacoinNetwork as bitcoin.Network;
+function getNetworkForWif(): bitcoin.Network {
+  return getActiveNetwork();
+}
 
 /** Import from WIF (Wallet Import Format). Accepts any valid WIF; address is always DDACOIN (starts with D). */
 export function getAddressFromWif(wifStr: string): { address: string; keypair: bitcoin.Signer } {
@@ -68,29 +74,41 @@ export function getAddressFromWif(wifStr: string): { address: string; keypair: b
   }
   const keypair = ECPair.fromPrivateKey(decoded.privateKey, {
     compressed: decoded.compressed,
-    network,
+    network: getNetworkForWif(),
   });
   const payment = bitcoin.payments.p2pkh({
     pubkey: keypair.publicKey,
-    network,
+    network: getNetworkForWif(),
   });
   if (!payment.address) throw new Error('Invalid WIF or network');
   return { address: payment.address, keypair };
 }
 
 /** Subunits per coin (1 DDACOIN = 10^8) */
-export const SUBUNITS_PER_COIN = 10 ** DDACOIN.decimals;
+export function getSubunitsPerCoin(): number {
+  return 10 ** getActiveWalletCoinConfig().decimals;
+}
 
 /** Parse amount string (e.g. "1.5") to subunits */
 export function toSubunits(amountStr: string): number {
   const n = parseFloat(amountStr);
   if (!Number.isFinite(n) || n < 0) throw new Error('Invalid amount');
-  return Math.round(n * SUBUNITS_PER_COIN);
+  return Math.round(n * getSubunitsPerCoin());
 }
 
 /** Format subunits to display string */
 export function fromSubunits(subunits: number): string {
-  return (subunits / SUBUNITS_PER_COIN).toFixed(DDACOIN.decimals).replace(/\.?0+$/, '');
+  const coin = getActiveWalletCoinConfig();
+  return (subunits / getSubunitsPerCoin()).toFixed(coin.decimals).replace(/\.?0+$/, '');
+}
+
+export function isValidAddressForActiveNetwork(address: string): boolean {
+  try {
+    bitcoin.address.toOutputScript(address, getActiveNetwork());
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Compute spendable balance and UTXOs from searchrawtransactions results for one address */
@@ -111,7 +129,7 @@ export function balanceFromTxs(
         received.push({
           txid: tx.txid,
           vout: out.n,
-          value: Math.round(out.value * SUBUNITS_PER_COIN),
+          value: Math.round(out.value * getSubunitsPerCoin()),
           scriptPubKey: out.scriptPubKey.hex,
         });
       }
@@ -143,7 +161,7 @@ export async function buildAndSignTx(
   fetchTxHex: FetchTxHex,
   feePerKb = 1000
 ): Promise<string> {
-  const net = ddacoinNetwork as bitcoin.Network;
+  const net = getActiveNetwork();
   const psbt = new bitcoin.Psbt({ network: net });
   let totalIn = 0;
   for (const u of utxos) {

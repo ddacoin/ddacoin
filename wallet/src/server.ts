@@ -24,8 +24,10 @@ import {
   balanceFromTxs,
   buildAndSignTx,
   fromSubunits,
+  isValidAddressForActiveNetwork,
   toSubunits,
 } from './wallet.js';
+import { getActiveWalletRpcDefaultPort, walletNetworkNameFromEnv } from './constants/ddacoin.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -43,9 +45,10 @@ const SESSION_COOKIE = 'wallet_session';
 
 function getRpcConfig(): RpcConfig {
   const useHttps = process.env.RPC_USE_HTTPS !== '0' && process.env.RPC_USE_HTTPS !== 'false';
+  const defaultRpcPort = getActiveWalletRpcDefaultPort();
   return {
     host: process.env.RPC_HOST || 'host.docker.internal',
-    port: Number(process.env.RPC_PORT) || 9667,
+    port: Number(process.env.RPC_PORT) || defaultRpcPort,
     user: process.env.RPC_USER || '',
     pass: process.env.RPC_PASS || '',
     useHttps,
@@ -99,8 +102,10 @@ app.get('/api/status', async (_req, res) => {
   const rpc = getRpcConfig();
   const result = await checkRpcConnection(rpc);
   if (!result.ok) {
+    const networkName = walletNetworkNameFromEnv();
+    const defaultPort = getActiveWalletRpcDefaultPort();
     const hint =
-      ' Ensure the node is running (e.g. docker compose up -d in the ddacoin folder), node has --rpclisten=0.0.0.0:9667, and wallet/.env has RPC_USER and RPC_PASS matching the node.';
+      ` Ensure the node is running, configured for ${networkName}, listens on --rpclisten=0.0.0.0:${defaultPort}, and wallet/.env has matching RPC_USER/RPC_PASS.`;
     return res.json({ ok: false, error: result.error + hint });
   }
   res.json({ ok: true, blockHeight: result.blockHeight });
@@ -211,8 +216,12 @@ app.post('/api/wallet/send', requireSession, async (req, res) => {
     return res.status(400).json({ error: 'Missing toAddress or amount' });
   }
   const trimmedAddr = toAddress.trim();
-  if (!trimmedAddr.startsWith('D')) {
-    return res.status(400).json({ error: 'Invalid DDACOIN address (must start with D)' });
+  if (!isValidAddressForActiveNetwork(trimmedAddr)) {
+    const networkName = walletNetworkNameFromEnv();
+    const hint = networkName === 'testnet'
+      ? 'Expected DDACOIN testnet address (legacy m/n/2 or bech32 tdda1...).'
+      : 'Expected DDACOIN mainnet address (legacy D or bech32 dda1...).';
+    return res.status(400).json({ error: `Invalid address for active network. ${hint}` });
   }
   let amountSubunits: number;
   try {
