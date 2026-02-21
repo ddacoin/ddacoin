@@ -233,10 +233,15 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq, triggerReconnect bool) {
 				cm.NewConnReq()
 			})
 		} else {
-			go func(theId uint64) {
+			theId := c.id
+			delay := cm.cfg.RetryDuration / 5
+			if delay <= 0 || delay < 250*time.Millisecond {
+				delay = 250 * time.Millisecond
+			}
+			time.AfterFunc(delay, func() {
 				cm.Remove(theId)
 				cm.NewConnReq()
-			}(c.id)
+			})
 		}
 	}
 }

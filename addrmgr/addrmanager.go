@@ -824,6 +824,9 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 				e = e.Next()
 			}
 			ka := e.Value.(*KnownAddress)
+			if ka.isBad() {
+				continue
+			}
 			lastKa = ka
 			randval := a.rand.Intn(large)
 			if float64(randval) < (factor * ka.chance() * float64(large)) {
@@ -839,7 +842,13 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 		// Hit iteration cap without selecting; return any tried address.
 		for b := range a.addrTried {
 			if a.addrTried[b].Len() > 0 {
-				return a.addrTried[b].Front().Value.(*KnownAddress)
+				for e := a.addrTried[b].Front(); e != nil; e = e.Next() {
+					ka := e.Value.(*KnownAddress)
+					if ka.isBad() {
+						continue
+					}
+					return ka
+				}
 			}
 		}
 	} else {
@@ -863,6 +872,9 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 				}
 				nth--
 			}
+			if ka == nil || ka.isBad() {
+				continue
+			}
 			lastKa = ka
 			randval := a.rand.Intn(large)
 			if float64(randval) < (factor * ka.chance() * float64(large)) {
@@ -878,6 +890,9 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 		// Hit iteration cap without selecting; return any new address.
 		for b := range a.addrNew {
 			for _, ka := range a.addrNew[b] {
+				if ka == nil || ka.isBad() {
+					continue
+				}
 				return ka
 			}
 		}

@@ -5,6 +5,7 @@
 package addrmgr
 
 import (
+	"math"
 	"sync"
 	"time"
 
@@ -68,8 +69,9 @@ func (ka *KnownAddress) chance() float64 {
 	}
 
 	// Failed attempts deprioritise.
-	for i := ka.attempts; i > 0; i-- {
-		c /= 1.5
+	if ka.attempts > 0 {
+		// Avoid O(attempts) loops when attempts gets very large.
+		c /= math.Pow(1.5, float64(ka.attempts))
 	}
 
 	return c
