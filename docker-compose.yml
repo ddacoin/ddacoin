@@ -29,6 +29,7 @@ services:
       - "--txindex"
       - "--addrindex"
       - "${HIGHPOWER:+--highpower}"
+      - "${NO_IPV6:+--noipv6}"
       - "--generate"
       - "--miningaddr=${MINING_ADDR}"
     restart: unless-stopped

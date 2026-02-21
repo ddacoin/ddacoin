@@ -3044,6 +3044,17 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 					break
 				}
 
+				// If configured, skip IPv6 addresses for outbound connections.
+				// This avoids repeated failed connection attempts on networks
+				// without IPv6 connectivity.
+				if cfg.NoIPv6 {
+					remoteLna := addr.NetAddress().ToLegacy()
+					if remoteLna.IP != nil && remoteLna.IP.To4() == nil &&
+						!addrmgr.IsOnionCatTor(remoteLna) {
+						continue
+					}
+				}
+
 				// Address will not be invalid, local or unroutable
 				// because addrmanager rejects those on addition.
 				// Just check that we don't already have an address
@@ -3111,6 +3122,16 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		netAddr, err := addrStringToNetAddr(addr)
 		if err != nil {
 			return nil, err
+		}
+
+		// If configured, avoid initiating outbound connections to IPv6 peers.
+		if cfg.NoIPv6 {
+			if tcpAddr, ok := netAddr.(*net.TCPAddr); ok {
+				if tcpAddr.IP != nil && tcpAddr.IP.To4() == nil {
+					srvrLog.Warnf("Skipping IPv6 peer %s due to --noipv6", addr)
+					continue
+				}
+			}
 		}
 
 		go s.connManager.Connect(&connmgr.ConnReq{
@@ -3279,6 +3300,18 @@ func addrStringToNetAddr(addr string) (net.Addr, error) {
 	}
 	if len(ips) == 0 {
 		return nil, fmt.Errorf("no addresses found for %s", host)
+	}
+
+	// Prefer IPv4 if outbound IPv6 connections have been disabled.
+	if cfg.NoIPv6 {
+		for _, ip := range ips {
+			if ip != nil && ip.To4() != nil {
+				return &net.TCPAddr{
+					IP:   ip,
+					Port: port,
+				}, nil
+			}
+		}
 	}
 
 	return &net.TCPAddr{

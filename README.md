@@ -48,6 +48,11 @@ If you want to **mine / produce blocks**, you will also need:
 
 - `MINING_ADDR` – a DDACOIN address (see next section)
 
+Optional node flags (enabled by setting the env var to any non-empty value):
+
+- `HIGHPOWER` – enable high-power defaults (more peers/caches)
+- `NO_IPV6` – disable outbound IPv6 connections (skip IPv6 peers)
+
 ---
 
 ## 3. Creating a DDACOIN address (for `MINING_ADDR`)

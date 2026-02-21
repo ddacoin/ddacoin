@@ -11,6 +11,12 @@ specified on the command line as shown below with the -- prefix or in the
 configuration file without the -- prefix (as can all long command line options).
 The configuration file takes one entry per line.
 
+If you are on a network without IPv6 connectivity and notice repeated failed
+outbound connection attempts to IPv6 peers, you can disable outbound IPv6
+connections with `--noipv6` (or `noipv6=1` in the config file).  When enabled,
+btcd will skip IPv6 peers when selecting new outbound connections and prefer
+IPv4 when resolving hostnames.
+
 **NOTE:** The listen flag can be specified multiple times to listen on multiple
 interfaces as a couple of the examples below illustrate.
 

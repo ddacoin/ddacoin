@@ -148,6 +148,7 @@ type config struct {
 	DisableCheckpoints   bool          `long:"nocheckpoints" description:"Disable built-in checkpoints.  Don't do this unless you know what you're doing."`
 	DisableDNSSeed       bool          `long:"nodnsseed" description:"Disable DNS seeding for peers"`
 	DisableListen        bool          `long:"nolisten" description:"Disable listening for incoming connections -- NOTE: Listening is automatically disabled if the --connect or --proxy options are used without also specifying listen interfaces via --listen"`
+	NoIPv6               bool          `long:"noipv6" description:"Disable outbound IPv6 connections (skip IPv6 peers when selecting new outbound connections and prefer IPv4 when resolving hostnames)"`
 	NoOnion              bool          `long:"noonion" description:"Disable connecting to tor hidden services"`
 	NoPeerBloomFilters   bool          `long:"nopeerbloomfilters" description:"Disable bloom filtering support"`
 	NoRelayPriority      bool          `long:"norelaypriority" description:"Do not require free or low-fee transactions to have high priority for relaying"`

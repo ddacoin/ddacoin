@@ -15,3 +15,4 @@ services:
       - "--txindex"
       - "--addrindex"
       - "${HIGHPOWER:+--highpower}"
+      - "${NO_IPV6:+--noipv6}"
