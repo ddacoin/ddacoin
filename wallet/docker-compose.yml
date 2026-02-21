@@ -7,7 +7,7 @@
 services:
   wallet:
     build: .
-    container_name: ddacoin-wallet
+    container_name: ${WALLET_CONTAINER_NAME:-ddacoin-wallet}
     ports:
       - "${WALLET_PORT:-3080}:3080"
     environment:
