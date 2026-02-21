@@ -19,21 +19,34 @@ Open **http://localhost:9080** (or the port set as `EXPLORER_PORT` in `.env`).
 
 ### Configuration (`.env`)
 
-| Variable        | Default                  | Description                         |
-|-----------------|--------------------------|-------------------------------------|
-| `RPC_HOST`      | `host.docker.internal`   | Node host (when using Docker)       |
-| `RPC_PORT`      | `9667`                   | Node RPC port                       |
-| `RPC_USER`      | (required)               | Must match node’s RPC user          |
-| `RPC_PASS`      | (required)               | Must match node’s RPC password     |
-| `EXPLORER_PORT` | `9080`                   | Host port for the explorer UI       |
+| Variable                 | Default             | Description                                                     |
+|--------------------------|---------------------|-----------------------------------------------------------------|
+| `DDACOIN_NETWORK`        | `mainnet`           | Explorer mode: `mainnet` or `testnet`                           |
+| `EXPLORER_CONTAINER_NAME`| `ddacoin-explorer`  | Container name (`ddacoin-testnet-explorer` recommended for testnet) |
+| `NODE_DOCKER_NETWORK`    | `ddacoin-net`       | Shared node network (`ddacoin-testnet-net` for testnet)         |
+| `RPC_HOST`               | (auto by network)   | Node host (`ddacoin-node` mainnet, `ddacoin-testnet-node` testnet) |
+| `RPC_PORT`               | (auto by network)   | Node RPC port (`9667` mainnet, `19667` testnet)                 |
+| `RPC_USER`               | (required)          | Must match node’s RPC user                                      |
+| `RPC_PASS`               | (required)          | Must match node’s RPC password                                  |
+| `EXPLORER_PORT`          | `9080`              | Host port for the explorer UI                                   |
 
-Optional: `RPC_URL` overrides host/port (e.g. `http://user:pass@host.docker.internal:9667`).  
+Optional: `RPC_URL` overrides host/port (e.g. `https://user:pass@ddacoin-node:9667`).  
 `.env` is not committed; use `.env.example` as a template.
+
+### Testnet side-by-side setup
+
+To run explorer for testnet without conflicting with mainnet explorer:
+
+- `DDACOIN_NETWORK=testnet`
+- `EXPLORER_CONTAINER_NAME=ddacoin-testnet-explorer`
+- `NODE_DOCKER_NETWORK=ddacoin-testnet-net`
+- `RPC_HOST=ddacoin-testnet-node`
+- `EXPLORER_PORT=19080` (optional, if mainnet explorer already uses `9080`)
 
 ### "Could not connect to node"
 
-1. **Node must have RPC enabled:** start ddacoin with e.g. `--rpcuser=user --rpcpass=pass` (and `--rpclisten=0.0.0.0:9667` if the explorer is in another container/host). Set `RPC_USER` / `RPC_PASS` in the explorer’s `.env` to match.
-2. **Reachability:** from the explorer container, the node must be reachable at `RPC_HOST:RPC_PORT`. When the explorer runs in Docker and the node on the host, use `RPC_HOST=host.docker.internal` (or on Linux try `172.17.0.1`). If the node runs in another container, use that service name and put both in the same Docker network.
+1. **Node must have RPC enabled:** start ddacoin with e.g. `--rpcuser=user --rpcpass=pass` (and `--rpclisten=0.0.0.0:<rpc-port>` if explorer is in another container/host). Set `RPC_USER` / `RPC_PASS` in explorer `.env` to match.
+2. **Reachability:** from explorer container, node must be reachable at `RPC_HOST:RPC_PORT`. If node runs in another container, use service name and the same Docker network (`ddacoin-net` mainnet, `ddacoin-testnet-net` testnet). If node runs on host, use host IP (Linux often `172.17.0.1`).
 
 ## Pages
 

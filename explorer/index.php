@@ -8,11 +8,15 @@ $count = rpc_get($config, 'getblockcount');
 if ($count === null) {
     $res = rpc_call($config, 'getblockcount');
     $error = $res['error'] ?? 'Unknown error';
+    $defaultHost = $config['rpc_default_host'] ?? 'ddacoin-node';
+    $defaultPort = $config['rpc_default_port'] ?? '9667';
+    $defaultNetwork = $config['network'] ?? 'mainnet';
+    $defaultDockerNet = $defaultNetwork === 'testnet' ? 'ddacoin-testnet-net' : 'ddacoin-net';
     require __DIR__ . '/header.php';
     echo "<div class='err'>RPC error: " . htmlspecialchars($error) . "</div>";
     echo "<p>Ensure the DDACOIN node is running with RPC enabled (e.g. <code>--rpcuser=user --rpcpass=pass</code>) and that RPC_HOST/RPC_PORT (or RPC_URL) point to the node. ";
-    echo "If the explorer runs in Docker and the node on the host: in <code>explorer/.env</code> set <code>RPC_HOST=172.17.0.1</code> (Linux) or your host IP (e.g. 172.17.0.1 or the machine's LAN address), and <code>RPC_URL=https://&lt;same&gt;:9667</code>. ";
-    echo "If the node runs in Docker with the explorer, use <code>RPC_HOST=ddacoin-node</code> and ensure both share network <code>ddacoin-net</code>.</p>";
+    echo "If the explorer runs in Docker with the node, default <code>DDACOIN_NETWORK={$defaultNetwork}</code> expects <code>RPC_HOST={$defaultHost}</code>, <code>RPC_PORT={$defaultPort}</code>, and shared network <code>{$defaultDockerNet}</code>. ";
+    echo "If the explorer runs in Docker and the node on the host: in <code>explorer/.env</code> set <code>RPC_HOST=172.17.0.1</code> (Linux) or your host IP, and use <code>RPC_URL=https://&lt;same&gt;:{$defaultPort}</code>.</p>";
     require __DIR__ . '/footer.php';
     exit;
 }
