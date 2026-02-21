@@ -17,6 +17,11 @@ const (
 	DDACoinBlockTimeSeconds   = 3600                    // 1 hour
 	DDACoinHalvingHours       = 17520                   // 2 years
 	DDACoinInitialBlockReward = DDACoinMaxSupplySubunits / (DDACoinHalvingHours * 2)
+
+	// DDACoinTestNetMaxSupplySubunits is 10x mainnet supply for testnet.
+	DDACoinTestNetMaxSupplySubunits = 20_000_000 * 100_000_000
+	// DDACoinTestNetBlockReward is a constant testnet subsidy (no halving).
+	DDACoinTestNetBlockReward = DDACoinTestNetMaxSupplySubunits / (DDACoinHalvingHours * 2)
 )
 
 // ddacoinGenesisCoinbaseTx is the coinbase transaction for the DDACOIN genesis block.
@@ -76,6 +81,26 @@ func CalcDDACoinBlockSubsidy(blockTimestamp, genesisTimestamp time.Time) int64 {
 		return 0
 	}
 	return reward
+}
+
+// CalcDDACoinSubsidyForParams returns the DDACOIN-family subsidy for the
+// provided network parameters.
+func CalcDDACoinSubsidyForParams(blockTimestamp time.Time, params *Params) int64 {
+	if params == nil || params.GenesisBlock == nil {
+		return 0
+	}
+	if params.Net == wire.DDACoinTestNet {
+		return int64(DDACoinTestNetBlockReward)
+	}
+	return CalcDDACoinBlockSubsidy(blockTimestamp, params.GenesisBlock.Header.Timestamp)
+}
+
+// IsDDACoinNet returns whether params represent a DDACOIN-family network.
+func IsDDACoinNet(params *Params) bool {
+	if params == nil {
+		return false
+	}
+	return params.Net == wire.DDACoinNet || params.Net == wire.DDACoinTestNet
 }
 
 func init() {

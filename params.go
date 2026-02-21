@@ -78,6 +78,13 @@ var ddacoinMainNetParams = params{
 	rpcPort: "9667",
 }
 
+// ddacoinTestNetParams contains parameters specific to the DDACOIN test network
+// (wire.DDACoinTestNet). Time-based consensus with isolated network params.
+var ddacoinTestNetParams = params{
+	Params:  &chaincfg.DDACoinTestNetParams,
+	rpcPort: "19667",
+}
+
 // netName returns the name used when referring to a bitcoin network.  At the
 // time of writing, btcd currently places blocks for testnet version 3 in the
 // data and log directory "testnet", which does not match the Name field of the

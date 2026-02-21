@@ -282,8 +282,8 @@ func createCoinbaseTx(params *chaincfg.Params, coinbaseScript []byte, nextBlockH
 		Sequence:        wire.MaxTxInSequenceNum,
 	})
 	subsidy := int64(0)
-	if params.Net == wire.DDACoinNet && !blockTime.IsZero() && params.GenesisBlock != nil {
-		subsidy = chaincfg.CalcDDACoinBlockSubsidy(blockTime, params.GenesisBlock.Header.Timestamp)
+	if chaincfg.IsDDACoinNet(params) && !blockTime.IsZero() && params.GenesisBlock != nil {
+		subsidy = chaincfg.CalcDDACoinSubsidyForParams(blockTime, params)
 	} else {
 		subsidy = blockchain.CalcBlockSubsidy(nextBlockHeight, params)
 	}

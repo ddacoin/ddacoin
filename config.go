@@ -186,6 +186,7 @@ type config struct {
 	SigNetSeedNode       []string      `long:"signetseednode" description:"Specify a seed node for the signet network instead of using the global default signet network seed nodes"`
 	TestNet3             bool          `long:"testnet" description:"Use the test network (version 3)"`
 	TestNet4             bool          `long:"testnet4" description:"Use the test network (version 4)"`
+	DDACoinTestNet       bool          `long:"ddacointestnet" description:"Use the DDACOIN test network"`
 	TorIsolation         bool          `long:"torisolation" description:"Enable Tor stream isolation by randomizing user credentials for each connection."`
 	TrickleInterval      time.Duration `long:"trickleinterval" description:"Minimum time between attempts to send new inventory to a connected peer"`
 	UtxoCacheMaxSizeMiB  uint          `long:"utxocachemaxsize" description:"The maximum size in MiB of the UTXO cache"`
@@ -568,6 +569,10 @@ func loadConfig() (*config, []string, error) {
 		numNets++
 		activeNetParams = &testNet4Params
 	}
+	if cfg.DDACoinTestNet {
+		numNets++
+		activeNetParams = &ddacoinTestNetParams
+	}
 	if cfg.RegressionTest {
 		numNets++
 		activeNetParams = &regressionNetParams
@@ -618,9 +623,9 @@ func loadConfig() (*config, []string, error) {
 		activeNetParams.Params = &chainParams
 	}
 	if numNets > 1 {
-		str := "%s: The testnet, regtest, segnet, signet and simnet " +
+		str := "%s: The testnet, testnet4, ddacointestnet, regtest, signet and simnet " +
 			"params can't be used together -- choose one of the " +
-			"five"
+			"six"
 		err := fmt.Errorf(str, funcName)
 		fmt.Fprintln(os.Stderr, err)
 		fmt.Fprintln(os.Stderr, usageMessage)
@@ -639,7 +644,7 @@ func loadConfig() (*config, []string, error) {
 
 	// DDACOIN low-resource defaults for small devices (e.g. Raspberry Pi).
 	// Reduces peer count, UTXO cache, and trickle frequency to lower CPU use.
-	if activeNetParams.Params.Net == wire.DDACoinNet {
+	if chaincfg.IsDDACoinNet(activeNetParams.Params) {
 		if cfg.MaxPeers == defaultMaxPeers {
 			cfg.MaxPeers = defaultMaxPeersDDACoin
 		}

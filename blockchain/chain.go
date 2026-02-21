@@ -1272,7 +1272,7 @@ func (b *BlockChain) connectBestChain(node *blockNode, block *btcutil.Block, fla
 	if cmpWork == 0 {
 		// Equal work: for DDACOIN, tie-break by preferring the block with the
 		// smaller hash (so the winner is not "first seen" but deterministic).
-		if b.chainParams.Net == wire.DDACoinNet && node.height == tip.height {
+		if chaincfg.IsDDACoinNet(b.chainParams) && node.height == tip.height {
 			if bytes.Compare(node.hash[:], tip.hash[:]) >= 0 {
 				log.Infof("FORK: Block %v forks the chain at height %d"+
 					"/block %v, tie-break keeps current tip (lower hash wins)",

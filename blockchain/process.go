@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/ddacoin/ddacoin/btcutil"
+	"github.com/ddacoin/ddacoin/chaincfg"
 	"github.com/ddacoin/ddacoin/chaincfg/chainhash"
 	"github.com/ddacoin/ddacoin/database"
-	"github.com/ddacoin/ddacoin/wire"
 )
 
 // BehaviorFlags is a bitmask defining tweaks to the normal behavior when
@@ -165,8 +165,8 @@ func (b *BlockChain) ProcessBlock(block *btcutil.Block, flags BehaviorFlags) (bo
 		return false, false, ruleError(ErrDuplicateBlock, str)
 	}
 
-	// For DDACOIN (time-based consensus), skip proof-of-work hash check.
-	if b.chainParams.Net == wire.DDACoinNet {
+	// For DDACOIN-family networks (time-based consensus), skip PoW hash checks.
+	if chaincfg.IsDDACoinNet(b.chainParams) {
 		flags |= BFNoPoWCheck
 	}
 	// Perform preliminary sanity checks on the block and its transactions.
@@ -195,7 +195,7 @@ func (b *BlockChain) ProcessBlock(block *btcutil.Block, flags BehaviorFlags) (bo
 				blockHeader.Timestamp, checkpointTime)
 			return false, false, ruleError(ErrCheckpointTimeTooOld, str)
 		}
-		if !fastAdd && b.chainParams.Net != wire.DDACoinNet {
+		if !fastAdd && !chaincfg.IsDDACoinNet(b.chainParams) {
 			// For non-DDACOIN: ensure proof of work is at least the minimum
 			// expected based on elapsed time since the last checkpoint.
 			// (DDACOIN uses time-based consensus, not difficulty.)

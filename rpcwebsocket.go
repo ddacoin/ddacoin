@@ -2234,8 +2234,11 @@ func checkAddressValidity(addrs []string, params *chaincfg.Params) error {
 		_, err := btcutil.DecodeAddress(addr, params)
 		if err != nil {
 			msg := "Invalid address or key: " + err.Error()
-			if params.Net == wire.DDACoinNet && errors.Is(err, btcutil.ErrUnknownAddressType) {
-				msg = "Invalid address or key: address is for another network. DDACOIN addresses start with D (legacy) or dda1 (bech32)."
+			if chaincfg.IsDDACoinNet(params) && errors.Is(err, btcutil.ErrUnknownAddressType) {
+				msg = fmt.Sprintf(
+					"Invalid address or key: address is for another network. Expected bech32 prefix %s1 for this DDACOIN network.",
+					params.Bech32HRPSegwit,
+				)
 			}
 			return &btcjson.RPCError{
 				Code:    btcjson.ErrRPCInvalidAddressOrKey,

@@ -25,6 +25,19 @@ export const ddacoinNetwork = {
   wif: 0xbd,
 };
 
+/** Bitcoinjs-lib network object for DDACOIN testnet (matches chaincfg/ddacoin_testnet.go) */
+export const ddacoinTestnetNetwork = {
+  messagePrefix: '\x18DDACOIN Signed Message:\n',
+  bech32: 'tdda',
+  bip32: {
+    public: 0x043587cf,
+    private: 0x04358394,
+  },
+  pubKeyHash: 0x6f,
+  scriptHash: 0xc4,
+  wif: 0xef,
+};
+
 /** Networks that decode to DDACOIN addresses (for WIF import). Accept DDACOIN (0xbd), Bitcoin mainnet (0x80), and testnet (0xef) WIFs. */
 export const wifImportNetworks = [
   ddacoinNetwork,

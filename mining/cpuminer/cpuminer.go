@@ -39,8 +39,6 @@ const (
 	// keep track of the hashes per second.
 	hashUpdateSecs = 15
 
-	// ddacoinBlockIntervalSecs is the required seconds between blocks for DDACOIN (1 hour).
-	ddacoinBlockIntervalSecs = 3600
 	// ddacoinProducerPollSecs is how often the time-based producer rechecks (seconds).
 	// Kept high to reduce CPU wakeups on low-power devices (e.g. Raspberry Pi).
 	ddacoinProducerPollSecs = 600
@@ -123,6 +121,13 @@ type CPUMiner struct {
 	updateHashes      chan uint64
 	speedMonitorQuit  chan struct{}
 	quit              chan struct{}
+}
+
+func (m *CPUMiner) ddacoinBlockInterval() time.Duration {
+	if m.cfg.ChainParams != nil && m.cfg.ChainParams.TargetTimePerBlock > 0 {
+		return m.cfg.ChainParams.TargetTimePerBlock
+	}
+	return time.Duration(chaincfg.DDACoinBlockTimeSeconds) * time.Second
 }
 
 // speedMonitor handles tracking the number of hashes per second the mining
@@ -383,7 +388,7 @@ out:
 	log.Tracef("Generate blocks worker done")
 }
 
-// ddacoinBlockProducerLoop produces one block per time slot (1 hour) for DDACOIN.
+// ddacoinBlockProducerLoop produces one block per slot for DDACOIN-family networks.
 // No proof-of-work; when multiple valid blocks exist for a slot, the one with the
 // smallest block hash wins (tie-break in consensus). A random delay before building
 // spreads submission time so the outcome is not purely latency-based. Must be run as a goroutine.
@@ -417,7 +422,7 @@ out:
 
 		m.submitBlockLock.Lock()
 		best := m.g.BestSnapshot()
-		nextSlot := best.BlockTime.Add(ddacoinBlockIntervalSecs * time.Second)
+		nextSlot := best.BlockTime.Add(m.ddacoinBlockInterval())
 		m.submitBlockLock.Unlock()
 
 		now := time.Now()
@@ -561,7 +566,7 @@ func (m *CPUMiner) Start() {
 
 	m.quit = make(chan struct{})
 	m.speedMonitorQuit = make(chan struct{})
-	if m.cfg.ChainParams.Net == wire.DDACoinNet {
+	if chaincfg.IsDDACoinNet(m.cfg.ChainParams) {
 		m.wg.Add(1)
 		go m.ddacoinBlockProducerLoop()
 	} else {
@@ -683,7 +688,7 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 
 	m.started = true
 	m.discreteMining = true
-	isDDACoin := m.cfg.ChainParams.Net == wire.DDACoinNet
+	isDDACoin := chaincfg.IsDDACoinNet(m.cfg.ChainParams)
 	m.Unlock()
 
 	blockHashes := make([]*chainhash.Hash, n)
@@ -700,7 +705,7 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 		for i := uint32(0); i < n; i++ {
 			m.submitBlockLock.Lock()
 			best := m.g.BestSnapshot()
-			nextSlot := best.BlockTime.Add(ddacoinBlockIntervalSecs * time.Second)
+			nextSlot := best.BlockTime.Add(m.ddacoinBlockInterval())
 			m.submitBlockLock.Unlock()
 
 			now := time.Now()

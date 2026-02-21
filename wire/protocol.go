@@ -197,6 +197,9 @@ const (
 
 	// DDACoinNet represents the DDACOIN main network (time-based consensus).
 	DDACoinNet BitcoinNet = 0xDDA0C011 // DDACOIN magic bytes
+
+	// DDACoinTestNet represents the DDACOIN test network.
+	DDACoinTestNet BitcoinNet = 0xDDA0C012
 )
 
 // bnStrings is a map of bitcoin networks back to their constant names for
@@ -209,6 +212,7 @@ var bnStrings = map[BitcoinNet]string{
 	SigNet:     "SigNet",
 	SimNet:     "SimNet",
 	DDACoinNet: "DDACoinNet",
+	DDACoinTestNet: "DDACoinTestNet",
 }
 
 // String returns the BitcoinNet in human-readable form.

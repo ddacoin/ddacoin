@@ -28,6 +28,7 @@ services:
       - "--rpcmaxclients=20"
       - "--txindex"
       - "--addrindex"
+      - "${DDACOIN_TESTNET:+--ddacointestnet}"
       - "${HIGHPOWER:+--highpower}"
       - "${NO_IPV6:+--noipv6}"
       - "--generate"

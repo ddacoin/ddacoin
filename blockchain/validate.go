@@ -1091,13 +1091,15 @@ func (b *BlockChain) checkConnectBlock(node *blockNode, block *btcutil.Block, vi
 		return ruleError(ErrMissingTxOut, str)
 	}
 
-	// DDACOIN time-based consensus: block must be at least 1 hour after parent.
-	// (Not-in-future is already enforced in CheckBlockHeaderSanity.)
-	if b.chainParams.Net == wire.DDACoinNet && node.parent != nil {
+	// DDACOIN-family time-based consensus: block must be at least the configured
+	// target spacing after parent. (Not-in-future is already enforced in
+	// CheckBlockHeaderSanity.)
+	if chaincfg.IsDDACoinNet(b.chainParams) && node.parent != nil {
 		blockTime := block.MsgBlock().Header.Timestamp.Unix()
 		parentTime := node.parent.Timestamp()
-		if blockTime < parentTime+3600 {
-			str := "block timestamp must be at least 1 hour after parent"
+		minSpacingSecs := int64(b.chainParams.TargetTimePerBlock / time.Second)
+		if blockTime < parentTime+minSpacingSecs {
+			str := "block timestamp must be at least target time per block after parent"
 			return ruleError(ErrTimeTooOld, str)
 		}
 	}
@@ -1235,10 +1237,10 @@ func (b *BlockChain) checkConnectBlock(node *blockNode, block *btcutil.Block, vi
 		totalSatoshiOut += txOut.Value
 	}
 	var expectedSubsidy int64
-	if b.chainParams.Net == wire.DDACoinNet {
+	if chaincfg.IsDDACoinNet(b.chainParams) {
 		blockHeader := block.MsgBlock().Header
-		expectedSubsidy = chaincfg.CalcDDACoinBlockSubsidy(
-			blockHeader.Timestamp, b.chainParams.GenesisBlock.Header.Timestamp)
+		expectedSubsidy = chaincfg.CalcDDACoinSubsidyForParams(
+			blockHeader.Timestamp, b.chainParams)
 	} else {
 		expectedSubsidy = CalcBlockSubsidy(node.height, b.chainParams)
 	}

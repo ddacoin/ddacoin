@@ -4,6 +4,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -13,6 +14,14 @@ import (
 )
 
 func main() {
+	testnet := flag.Bool("ddacointestnet", false, "generate address for DDACOIN testnet")
+	flag.Parse()
+
+	chainParams := &chaincfg.DDACoinMainNetParams
+	if *testnet {
+		chainParams = &chaincfg.DDACoinTestNetParams
+	}
+
 	priv, err := btcec.NewPrivateKey()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to generate private key:", err)
@@ -21,13 +30,13 @@ func main() {
 
 	pub := priv.PubKey()
 	pubHash := btcutil.Hash160(pub.SerializeCompressed())
-	addr, err := btcutil.NewAddressPubKeyHash(pubHash, &chaincfg.DDACoinMainNetParams)
+	addr, err := btcutil.NewAddressPubKeyHash(pubHash, chainParams)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to create address:", err)
 		os.Exit(1)
 	}
 
-	wif, err := btcutil.NewWIF(priv, &chaincfg.DDACoinMainNetParams, true)
+	wif, err := btcutil.NewWIF(priv, chainParams, true)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to create WIF:", err)
 		os.Exit(1)

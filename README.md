@@ -228,3 +228,72 @@ If you’d like to support DDACOIN development, you can send DDACOIN to:
 ## 9. License
 
 ISC (see `LICENSE`).
+
+---
+
+## 10. Testnet
+
+DDACOIN supports an isolated **testnet** network for testing.
+
+- Default behavior is **mainnet**.
+- Testnet is enabled only when `DDACOIN_TESTNET` is set to a non-empty value in `.env`.
+
+Example:
+
+```env
+DDACOIN_TESTNET=1
+```
+
+When enabled, Docker Compose adds `--ddacointestnet` to the node command.
+
+### Best practice: run testnet alongside mainnet on the same server
+
+Use a **separate compose project**, **separate env file**, **separate ports**, and
+**separate volume/network** for testnet.
+
+1. Copy the testnet env template:
+
+```bash
+cp .env.testnet.example .env.testnet
+```
+
+2. Generate a testnet payout address:
+
+```bash
+docker run --rm -v "$PWD":/src -w /src golang:1.23.4 go run ./cmd/genaddress --ddacointestnet
+```
+
+3. Put the generated address into `.env.testnet` as `MINING_ADDR`.
+
+4. Start testnet stack:
+
+```bash
+docker compose --project-name ddacoin-testnet --env-file .env.testnet \
+  -f docker-compose.yml -f docker-compose.testnet.yml up -d
+```
+
+#### Testnet node-only mode (no mining)
+
+```bash
+docker compose --project-name ddacoin-testnet --env-file .env.testnet \
+  -f docker-compose.yml -f docker-compose.testnet.yml -f docker-compose.testnet.node.yml up -d
+```
+
+In node-only mode, `MINING_ADDR` is not required.
+
+This avoids conflicts with mainnet by using:
+
+- testnet P2P/RPC ports: `19666` / `19667`
+- separate container name: `ddacoin-testnet-node`
+- separate data volume: `ddacoin-testnet-data`
+- separate Docker network: `ddacoin-testnet-net`
+
+### Testnet defaults
+
+- P2P port: `19666`
+- RPC port: `19667`
+- Bech32 prefix: `tdda1...`
+- Separate network magic/genesis from mainnet (no cross-chain mixing)
+
+To switch back to single-stack mainnet behavior, keep using `.env` with
+`DDACOIN_TESTNET` empty/unset and start only the default compose stack.

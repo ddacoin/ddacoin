@@ -1,0 +1,38 @@
+# DDACOIN testnet override.
+# Usage:
+# docker compose --project-name ddacoin-testnet --env-file .env.testnet \
+#   -f docker-compose.yml -f docker-compose.testnet.yml up -d
+#
+# This file is intended to run alongside a mainnet stack on the same server.
+
+services:
+  ddacoin:
+    container_name: ddacoin-testnet-node
+    ports:
+      - "19666:19666"   # P2P (testnet)
+      - "19667:19667"   # RPC (testnet)
+    volumes:
+      - ddacoin-testnet-data:/data
+    networks:
+      - ddacoin-testnet-net
+    command:
+      - "-b"
+      - "/data"
+      - "--rpcuser=${RPC_USER}"
+      - "--rpcpass=${RPC_PASS}"
+      - "--rpclisten=0.0.0.0:19667"
+      - "--rpcmaxclients=20"
+      - "--txindex"
+      - "--addrindex"
+      - "--ddacointestnet"
+      - "${HIGHPOWER:+--highpower}"
+      - "${NO_IPV6:+--noipv6}"
+      - "--generate"
+      - "--miningaddr=${MINING_ADDR}"
+
+networks:
+  ddacoin-testnet-net:
+    name: ddacoin-testnet-net
+
+volumes:
+  ddacoin-testnet-data: {}
