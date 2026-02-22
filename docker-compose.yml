@@ -33,6 +33,7 @@ services:
       - "${DDACOIN_TESTNET:+--ddacointestnet}"
       - "${HIGHPOWER:+--highpower}"
       - "${NO_IPV6:+--noipv6}"
+      - "${EXTERNAL_IP:+--externalip=${EXTERNAL_IP}}"
       - "--generate"
       - "--miningaddr=${MINING_ADDR}"
     restart: unless-stopped

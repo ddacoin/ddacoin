@@ -21,3 +21,4 @@ services:
       - "--ddacointestnet"
       - "${HIGHPOWER:+--highpower}"
       - "${NO_IPV6:+--noipv6}"
+      - "${EXTERNAL_IP:+--externalip=${EXTERNAL_IP}}"

@@ -824,7 +824,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 				e = e.Next()
 			}
 			ka := e.Value.(*KnownAddress)
-			if ka.isBad() {
+			if ka.isBad() || a.isLocalAddress(ka.na) {
 				continue
 			}
 			lastKa = ka
@@ -844,7 +844,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 			if a.addrTried[b].Len() > 0 {
 				for e := a.addrTried[b].Front(); e != nil; e = e.Next() {
 					ka := e.Value.(*KnownAddress)
-					if ka.isBad() {
+					if ka.isBad() || a.isLocalAddress(ka.na) {
 						continue
 					}
 					return ka
@@ -872,7 +872,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 				}
 				nth--
 			}
-			if ka == nil || ka.isBad() {
+			if ka == nil || ka.isBad() || a.isLocalAddress(ka.na) {
 				continue
 			}
 			lastKa = ka
@@ -890,7 +890,7 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 		// Hit iteration cap without selecting; return any new address.
 		for b := range a.addrNew {
 			for _, ka := range a.addrNew[b] {
-				if ka == nil || ka.isBad() {
+				if ka == nil || ka.isBad() || a.isLocalAddress(ka.na) {
 					continue
 				}
 				return ka
@@ -902,6 +902,15 @@ func (a *AddrManager) GetAddress() *KnownAddress {
 
 func (a *AddrManager) find(addr *wire.NetAddressV2) *KnownAddress {
 	return a.addrIndex[NetAddressKey(addr)]
+}
+
+// isLocalAddress returns true if the address is one of our local addresses
+// (e.g. from --externalip or bound interface). Prevents self-connection loops.
+func (a *AddrManager) isLocalAddress(na *wire.NetAddressV2) bool {
+	a.lamtx.Lock()
+	_, ok := a.localAddresses[NetAddressKey(na)]
+	a.lamtx.Unlock()
+	return ok
 }
 
 // Attempt increases the given address' attempt counter and updates
