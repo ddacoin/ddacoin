@@ -116,9 +116,9 @@ var DDACoinMainNetParams = Params{
 	Net:         wire.DDACoinNet,
 	DefaultPort: "9666",
 	DNSSeeds: []DNSSeed{
-		{Host: "ddacoinminer01.kos.engineer", HasFiltering: false},
-		{Host: "ddacoinminer02.kos.engineer", HasFiltering: false},
-		{Host: "ddacoinminer03.kos.engineer", HasFiltering: false},
+		{Host: "ddacoinminer01.dda-coin.com", HasFiltering: false},
+		{Host: "ddacoinminer02.dda-coin.com", HasFiltering: false},
+		{Host: "ddacoinminer03.dda-coin.com", HasFiltering: false},
 	},
 	GenesisBlock:             &ddacoinGenesisBlock,
 	GenesisHash:              &ddacoinGenesisHash,

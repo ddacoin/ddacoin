@@ -64,8 +64,8 @@ var DDACoinTestNetParams = Params{
 	Net:         wire.DDACoinTestNet,
 	DefaultPort: "19666",
 	DNSSeeds: []DNSSeed{
-		{Host: "ddacoinminer01.testnet.kos.engineer", HasFiltering: false},
-		{Host: "ddacoinminer02.testnet.kos.engineer", HasFiltering: false},
+		{Host: "ddacoinminer01.testnet.dda-coin.com", HasFiltering: false},
+		{Host: "ddacoinminer02.testnet.dda-coin.com", HasFiltering: false},
 	},
 
 	GenesisBlock:             &ddacoinTestNetGenesisBlock,

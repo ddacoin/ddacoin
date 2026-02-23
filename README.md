@@ -189,9 +189,9 @@ Take the new **address** for payouts, and back up the **WIF** securely (offline,
 ## 6. Network overview (for Docker users)
 
 - **P2P:** Port **9666** (mapped from the container). This is the port you typically expose to the public internet so other DDACOIN nodes can connect to you. Nodes connect to peers and/or use DNS seeds:  
-  - `ddacoinminer01.kos.engineer:9666`  
-  - `ddacoinminer02.kos.engineer:9666`  
-  - `ddacoinminer03.kos.engineer:9666`  
+  - `ddacoinminer01.dda-coin.com:9666`  
+  - `ddacoinminer02.dda-coin.com:9666`  
+  - `ddacoinminer03.dda-coin.com:9666`  
 - **RPC:** Port **9667** (mapped from the container). **Do not expose this port directly to the public internet.** Keep it firewalled or bound to a private network, and access it only from:  
   - Wallet (from `wallet/`)  
   - Explorer (from `explorer/`)  
@@ -210,8 +210,8 @@ The **web wallet** and **explorer** have their own Docker setups and READMEs:
 
 Public endpoints:
 
-- Explorer: https://explorer.ddacoin.kos.engineer/
-- Wallet: https://wallet.ddacoin.kos.engineer/
+- Explorer: https://explorer.dda-coin.com/
+- Wallet: https://wallet.dda-coin.com/
 
 They are designed to connect to the node’s RPC endpoint exposed on port `9667`.
 
