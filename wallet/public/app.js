@@ -83,6 +83,7 @@ document.querySelectorAll('nav a[data-page]').forEach(a => {
       show('pageSend');
       document.getElementById('sendError').classList.add('hidden');
       document.getElementById('sendSuccess').classList.add('hidden');
+      lastAmountBeforeFeeAdjust = null;
     }
   });
 });
@@ -150,9 +151,36 @@ document.getElementById('btnGoDashboard').addEventListener('click', () => {
   refreshWalletInfo();
 });
 
+let lastAmountBeforeFeeAdjust = null;
+
+document.getElementById('useMinimumFee').addEventListener('change', async () => {
+  const checkbox = document.getElementById('useMinimumFee');
+  const amountEl = document.getElementById('sendAmount');
+  const amount = amountEl.value.trim();
+  if (!amount) return;
+  const parsed = parseFloat(amount);
+  if (!Number.isFinite(parsed) || parsed <= 0) return;
+  try {
+    if (checkbox.checked) {
+      const d = await api('/wallet/max-sendable?useMinimumFee=true');
+      const maxFormatted = d.maxFormatted ?? '0';
+      if (parseFloat(amount) > parseFloat(maxFormatted)) {
+        lastAmountBeforeFeeAdjust = amount;
+        amountEl.value = maxFormatted;
+      }
+    } else if (lastAmountBeforeFeeAdjust != null) {
+      amountEl.value = lastAmountBeforeFeeAdjust;
+      lastAmountBeforeFeeAdjust = null;
+    }
+  } catch (e) {
+    console.warn('Could not fetch max sendable:', e);
+  }
+});
+
 document.getElementById('btnSend').addEventListener('click', async () => {
   const to = document.getElementById('sendTo').value.trim();
   const amount = document.getElementById('sendAmount').value.trim();
+  const useMinimumFee = document.getElementById('useMinimumFee').checked;
   document.getElementById('sendError').classList.add('hidden');
   document.getElementById('sendSuccess').classList.add('hidden');
   if (!to || !amount) {
@@ -163,7 +191,7 @@ document.getElementById('btnSend').addEventListener('click', async () => {
   try {
     const d = await api('/wallet/send', {
       method: 'POST',
-      body: JSON.stringify({ toAddress: to, amount }),
+      body: JSON.stringify({ toAddress: to, amount, useMinimumFee }),
     });
     document.getElementById('sendSuccess').textContent = `Sent. TX: ${d.txid}`;
     document.getElementById('sendSuccess').classList.remove('hidden');

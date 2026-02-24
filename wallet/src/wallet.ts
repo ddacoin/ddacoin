@@ -89,6 +89,17 @@ export function getSubunitsPerCoin(): number {
   return 10 ** getActiveWalletCoinConfig().decimals;
 }
 
+/** Compute max sendable amount (balance minus fee) for given UTXOs and fee rate. */
+export function computeMaxSendable(
+  utxos: { txid: string; vout: number; value: number; scriptPubKey: string }[],
+  feePerKb: number
+): { maxSubunits: number; fee: number } {
+  if (utxos.length === 0) return { maxSubunits: 0, fee: 0 };
+  const balance = utxos.reduce((s, u) => s + u.value, 0);
+  const fee = Math.ceil((utxos.length * 148 + 34 + 10) / 1000) * feePerKb;
+  return { maxSubunits: Math.max(0, balance - fee), fee };
+}
+
 /** Parse amount string (e.g. "1.5") to subunits */
 export function toSubunits(amountStr: string): number {
   const n = parseFloat(amountStr);

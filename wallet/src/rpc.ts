@@ -79,6 +79,27 @@ export async function getBlockCount(config: RpcConfig): Promise<number | null> {
   return out.result ?? null;
 }
 
+/** getinfo result; RelayFee is in BTC/kB (e.g. 0.00001 = 1000 sat/kB) */
+export interface GetInfoResult {
+  relayfee?: number;
+}
+
+export async function getInfo(config: RpcConfig): Promise<GetInfoResult | null> {
+  const out = await rpcCall<GetInfoResult>(config, 'getinfo', []);
+  if (out.error) return null;
+  return out.result ?? null;
+}
+
+/** Minimum relay fee in satoshi per kB; falls back to 1000 if getinfo fails */
+export async function getMinRelayFeePerKb(config: RpcConfig): Promise<number> {
+  const info = await getInfo(config);
+  const relayFeeBtcPerKb = info?.relayfee;
+  if (typeof relayFeeBtcPerKb === 'number' && relayFeeBtcPerKb > 0) {
+    return Math.ceil(relayFeeBtcPerKb * 100_000_000);
+  }
+  return 1000;
+}
+
 /** Check RPC connectivity and return block height or a clear error message for the UI. */
 export async function checkRpcConnection(config: RpcConfig): Promise<
   { ok: true; blockHeight: number } | { ok: false; error: string }

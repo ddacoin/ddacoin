@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import QRCode from 'qrcode';
 import {
   checkRpcConnection,
+  getMinRelayFeePerKb,
   getRawTransactionHex,
   searchRawTransactions,
   searchRawTransactionsWithError,
@@ -23,6 +24,7 @@ import {
   getAddressFromWif,
   balanceFromTxs,
   buildAndSignTx,
+  computeMaxSendable,
   fromSubunits,
   isValidAddressForActiveNetwork,
   toSubunits,
@@ -202,6 +204,26 @@ app.get('/api/wallet/balance', requireSession, async (req, res) => {
   });
 });
 
+/** Max sendable amount when using minimum fee (for UI auto-adjust) */
+app.get('/api/wallet/max-sendable', requireSession, async (req, res) => {
+  const useMinimumFee = req.query.useMinimumFee === 'true';
+  const session = getSession(req)!;
+  const rpc = getRpcConfig();
+  const txResult = await searchRawTransactionsWithError(rpc, session.address, { count: 500 });
+  if ('error' in txResult) {
+    return res.status(400).json({ error: txResult.error });
+  }
+  const { balance, utxos } = balanceFromTxs(txResult.txs, session.address);
+  const feePerKb = useMinimumFee ? await getMinRelayFeePerKb(rpc) : 1000;
+  const { maxSubunits, fee } = computeMaxSendable(utxos, feePerKb);
+  res.json({
+    maxSubunits,
+    maxFormatted: fromSubunits(maxSubunits),
+    fee,
+    feeFormatted: fromSubunits(fee),
+  });
+});
+
 /** Receive address + QR as data URL */
 app.get('/api/wallet/receive', requireSession, async (req, res) => {
   const session = getSession(req)!;
@@ -216,7 +238,11 @@ app.get('/api/wallet/receive', requireSession, async (req, res) => {
 /** Send DDACOIN */
 app.post('/api/wallet/send', requireSession, async (req, res) => {
   const session = getSession(req)!;
-  const { toAddress, amount } = req.body as { toAddress?: string; amount?: string };
+  const { toAddress, amount, useMinimumFee } = req.body as {
+    toAddress?: string;
+    amount?: string;
+    useMinimumFee?: boolean;
+  };
   if (!toAddress || typeof toAddress !== 'string' || !amount || typeof amount !== 'string') {
     return res.status(400).json({ error: 'Missing toAddress or amount' });
   }
@@ -248,6 +274,7 @@ app.post('/api/wallet/send', requireSession, async (req, res) => {
   }
   const fetchTxHex = (txid: string) => getRawTransactionHex(rpc, txid);
   const signer = session.wif ? { wif: session.wif } : { mnemonic: session.mnemonic! };
+  const feePerKb = useMinimumFee ? await getMinRelayFeePerKb(rpc) : 1000;
   try {
     const hexTx = await buildAndSignTx(
       signer,
@@ -255,7 +282,8 @@ app.post('/api/wallet/send', requireSession, async (req, res) => {
       trimmedAddr,
       amountSubunits,
       session.address,
-      fetchTxHex
+      fetchTxHex,
+      feePerKb
     );
     const result = await sendRawTransaction(rpc, hexTx);
     if ('error' in result) {

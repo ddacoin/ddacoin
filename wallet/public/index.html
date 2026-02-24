@@ -69,6 +69,14 @@
     nav a { color: var(--accent); text-decoration: none; margin-right: 1rem; }
     nav a:hover { text-decoration: underline; }
     .status { font-size: 0.85rem; color: var(--muted); }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+    }
+    .checkbox-row input[type="checkbox"] { width: auto; margin: 0; }
   </style>
 </head>
 <body>
@@ -134,6 +142,10 @@
         <h2>Send DDACOIN</h2>
         <input type="text" id="sendTo" placeholder="Destination address (starts with D)">
         <input type="text" id="sendAmount" placeholder="Amount (e.g. 1.5)">
+        <label class="checkbox-row">
+          <input type="checkbox" id="useMinimumFee">
+          Use minimum fee (node relay fee)
+        </label>
         <button type="button" id="btnSend">Send</button>
         <p id="sendError" class="error hidden"></p>
         <p id="sendSuccess" class="hidden" style="color: var(--success);"></p>
