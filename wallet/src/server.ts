@@ -214,7 +214,7 @@ app.get('/api/wallet/max-sendable', requireSession, async (req, res) => {
     return res.status(400).json({ error: txResult.error });
   }
   const { balance, utxos } = balanceFromTxs(txResult.txs, session.address);
-  const feePerKb = useMinimumFee ? await getMinRelayFeePerKb(rpc) : 1000;
+  const feePerKb = useMinimumFee ? await getMinRelayFeePerKb(rpc) : 0;
   const { maxSubunits, fee } = computeMaxSendable(utxos, feePerKb);
   res.json({
     maxSubunits,
@@ -274,7 +274,7 @@ app.post('/api/wallet/send', requireSession, async (req, res) => {
   }
   const fetchTxHex = (txid: string) => getRawTransactionHex(rpc, txid);
   const signer = session.wif ? { wif: session.wif } : { mnemonic: session.mnemonic! };
-  const feePerKb = useMinimumFee ? await getMinRelayFeePerKb(rpc) : 1000;
+  const feePerKb = useMinimumFee ? await getMinRelayFeePerKb(rpc) : 0;
   try {
     const hexTx = await buildAndSignTx(
       signer,
